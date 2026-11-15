@@ -17,3 +17,33 @@ static void trim_spasi(char *str){
     }
     str[j] = '\0';
 }
+
+int pecah_baris(const char *baris, char kolom[][256], int max_kolom){
+    int i = 0, jumlah_kolom = 0;
+
+    while (baris[i] != '\0' && baris[i] != '\n' && baris[i] != '\r' && jumlah_kolom < max_kolom){
+        while (baris[i] == ' ' || baris[i] == '\t') {i++;}
+        if (baris[i] == '\0' || baris[i] == '\n' || baris[i] == '\r') {break;}
+
+        int j = 0;
+        if (baris[i] == '"'){
+            i++;
+            while (baris[i] != '\0' && baris[i] != '"' && baris[i] != '\n' && baris[i] != '\r'){
+                if (j < 255) {kolom[jumlah_kolom][j++] = baris[i];}
+                i++;
+            }
+            if (baris[i] == '"') {i++;}
+        } else {
+            while (baris[i] != '\0' && baris[i] != ' ' && baris[i] != '\t' && baris[i] != '\n' && baris[i] != '\r'){
+                if (j < 255) {kolom[jumlah_kolom][j++] = baris[i];}
+                i++;
+            }
+        }
+
+        kolom[jumlah_kolom][j] = '\0';
+        trim_spasi(kolom[jumlah_kolom]);
+        jumlah_kolom++;
+    }
+
+   return jumlah_kolom;
+}
