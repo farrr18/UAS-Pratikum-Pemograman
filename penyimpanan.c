@@ -146,3 +146,61 @@ int baca_user(const char *nama_file, User **daftar_user, int *jumlah_user){
     *jumlah_user = count;
     return 1;
 }
+
+int baca_peminjaman(const char *nama_file, Peminjaman **daftar_peminjaman, int *jumlah_peminjaman){
+    FILE *fp = fopen(nama_file, "r");
+    if (fp == NULL) {
+        *daftar_peminjaman = NULL;
+        *jumlah_peminjaman = 0;
+        return 0;
+    }
+    int kapasitas = 64, count = 0;
+    Peminjaman *temp_list = (Peminjaman *)malloc(kapasitas * sizeof(Peminjaman));
+    if (temp_list == NULL) {
+        fclose(fp);
+        return 0;
+    }
+    char baris[MAX_LINE];
+    char kolom[10][256];
+
+    while (fgets(baris, sizeof(baris), fp) != NULL) {
+        int n_kolom = pecah_baris(baris, kolom, 10);
+        if (n_kolom < 7) continue;
+
+        if (count >= kapasitas) {
+            kapasitas *= 2;
+            Peminjaman *baru = (Peminjaman *)realloc(temp_list, kapasitas * sizeof(Peminjaman));
+            if (baru == NULL) {
+                free(temp_list);
+                fclose(fp);
+                return 0;
+            }
+            temp_list = baru;
+        }
+
+        temp_list[count].id_transaksi = atoi(kolom[0]);
+
+        strncpy(temp_list[count].username, kolom[1], sizeof(temp_list[count].username) - 1);
+        temp_list[count].username[sizeof(temp_list[count].username) - 1] = '\0';
+
+        temp_list[count].id_buku = atoi(kolom[2]);
+
+        strncpy(temp_list[count].judul_buku, kolom[3], sizeof(temp_list[count].judul_buku) - 1);
+        temp_list[count].judul_buku[sizeof(temp_list[count].judul_buku) - 1] = '\0';
+        
+        strncpy(temp_list[count].tanggal_pinjam, kolom[4], sizeof(temp_list[count].tanggal_pinjam) - 1);
+        temp_list[count].tanggal_pinjam[sizeof(temp_list[count].tanggal_pinjam) - 1] = '\0';
+
+        strncpy(temp_list[count].tanggal_kembali, kolom[5], sizeof(temp_list[count].tanggal_kembali) - 1);
+        temp_list[count].tanggal_kembali[sizeof(temp_list[count].tanggal_kembali) - 1] = '\0';
+
+        strncpy(temp_list[count].status, kolom[6], sizeof(temp_list[count].status) - 1);
+        temp_list[count].status[sizeof(temp_list[count].status) - 1] = '\0';
+
+        count++;
+    }
+    fclose(fp);
+    *daftar_peminjaman = temp_list;
+    *jumlah_peminjaman = count;
+    return 1;
+}
