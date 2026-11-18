@@ -98,3 +98,51 @@ int baca_buku(const char *nama_file, Buku **daftar_buku, int *jumlah_buku){
     return 1;
 
 }
+
+int baca_user(const char *nama_file, User **daftar_user, int *jumlah_user){
+    FILE *fp = fopen(nama_file, "r");
+    if (fp == NULL) {
+        *daftar_user = NULL;
+        *jumlah_user = 0;
+        return 0;
+    }
+    int kapasitas = 32, count = 0;
+    User *temp_list = (User *)malloc(kapasitas * sizeof(User));
+    if (temp_list == NULL) {
+        fclose(fp);
+        return 0;
+    }
+    char baris[MAX_LINE];
+    char kolom[5][256];
+
+    while (fgets(baris, sizeof(baris), fp) != NULL) {
+        int n_kolom = pecah_baris(baris, kolom, 5);
+        if (n_kolom < 3) continue;
+
+        if (count >= kapasitas) {
+            kapasitas *= 2;
+            User *baru = (User *)realloc(temp_list, kapasitas * sizeof(User));
+            if (baru == NULL) {
+                free(temp_list);
+                fclose(fp);
+                return 0;
+            }
+            temp_list = baru;
+        }
+
+        strncpy(temp_list[count].username, kolom[0], sizeof(temp_list[count].username) - 1);
+        temp_list[count].username[sizeof(temp_list[count].username) - 1] = '\0';
+
+        strncpy(temp_list[count].password, kolom[1], sizeof(temp_list[count].password) - 1);
+        temp_list[count].password[sizeof(temp_list[count].password) - 1] = '\0';
+
+        strncpy(temp_list[count].role, kolom[2], sizeof(temp_list[count].role) - 1);
+        temp_list[count].role[sizeof(temp_list[count].role) - 1] = '\0';
+
+        count++;
+    }
+    fclose(fp);
+    *daftar_user = temp_list;
+    *jumlah_user = count;
+    return 1;
+}
