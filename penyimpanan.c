@@ -222,3 +222,22 @@ int simpan_buku(const char *nama_file, Buku *daftar_buku, int jumlah_buku){
     fclose(fp);
     return 1;
 }
+
+int simpan_peminjaman(const char *nama_file, Peminjaman *daftar_pinjaman, int jumlah_pinjaman){
+    FILE *fp = fopen(nama_file, "w");
+    if (fp == NULL) {
+        return 0;
+    }
+    for (int i = 0; i < jumlah_pinjaman; i++) {
+        fprintf(fp, "%d %s %d \"%s\" %s %s %s\n", 
+                daftar_pinjaman[i].id_transaksi, 
+                daftar_pinjaman[i].username, 
+                daftar_pinjaman[i].id_buku, 
+                daftar_pinjaman[i].judul_buku, 
+                daftar_pinjaman[i].tanggal_pinjam, 
+                daftar_pinjaman[i].tanggal_kembali, 
+                daftar_pinjaman[i].status);
+    }
+    fclose(fp);
+    return 1;
+}
