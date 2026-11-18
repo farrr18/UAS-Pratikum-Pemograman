@@ -204,3 +204,21 @@ int baca_peminjaman(const char *nama_file, Peminjaman **daftar_peminjaman, int *
     *jumlah_peminjaman = count;
     return 1;
 }
+
+int simpan_buku(const char *nama_file, Buku *daftar_buku, int jumlah_buku){
+    FILE *fp = fopen(nama_file, "w");
+    if (fp == NULL) {
+        return 0;
+    }
+    for (int i = 0; i < jumlah_buku; i++) {
+        fprintf(fp, "%d \"%s\" \"%s\" %d %d %d\n", 
+                daftar_buku[i].id, 
+                daftar_buku[i].judul, 
+                daftar_buku[i].penulis, 
+                daftar_buku[i].tahun, 
+                daftar_buku[i].halaman, 
+                daftar_buku[i].stok);
+    }
+    fclose(fp);
+    return 1;
+}
