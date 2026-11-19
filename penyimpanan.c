@@ -251,21 +251,21 @@ int muat_data(Buku **daftar_buku, int *jumlah_buku, User **daftar_user, int *jum
 }
 
 void bebaskan_memori(Buku **daftar_buku, int *jumlah_buku, User **daftar_user, int *jumlah_user, Peminjaman **daftar_pinjam, int *jumlah_pinjam){
-    if (*daftar_buku != NULL && *daftar_buku != NULL) {
+    if (daftar_buku != NULL && *daftar_buku != NULL) {
         free(*daftar_buku);
         *daftar_buku = NULL;
     }
     if (jumlah_buku != NULL) {
         *jumlah_buku = 0;
     }
-    if (*daftar_user != NULL && *daftar_user != NULL) {
+    if (daftar_user != NULL && *daftar_user != NULL) {
         free(*daftar_user);
         *daftar_user = NULL;
     }
     if (jumlah_user != NULL) {
         *jumlah_user = 0;
     }
-    if (*daftar_pinjam != NULL && *daftar_pinjam != NULL) {
+    if (daftar_pinjam != NULL && *daftar_pinjam != NULL) {
         free(*daftar_pinjam);
         *daftar_pinjam = NULL;
     }
