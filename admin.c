@@ -72,3 +72,33 @@ void tambah_buku(void) {
     free(daftar_buku);
 }
 
+void tampilkan_semua_buku(void) {
+    Buku *daftar_buku = NULL;
+    int jumlah_buku = 0;
+
+    printf("\n=== DAFTAR SEMUA BUKU ===\n");
+    if(!baca_buku(FILE_BUKU, &daftar_buku, &jumlah_buku)) {
+        printf("Gagal membaca data buku!\n");
+        free(daftar_buku);
+        return;
+    }
+
+    if (jumlah_buku == 0) {
+        printf("Belum ada buku.\n");
+        free(daftar_buku);
+        return;
+    }
+
+    for (int i = 0; i < jumlah_buku; i++){
+        printf("\nBuku ke-%d\n", i + 1);
+        printf("ID Buku      : %d\n", daftar_buku[i].id);
+        printf("Judul Buku   : %s\n", daftar_buku[i].judul);
+        printf("Penulis      : %s\n", daftar_buku[i].penulis);
+        printf("Tahun terbit : %d\n", daftar_buku[i].tahun);
+        printf("Jumlah Halaman: %d\n", daftar_buku[i].halaman);
+        printf("Stok Buku    : %d\n", daftar_buku[i].stok);
+        
+    }
+
+    free(daftar_buku);
+}
