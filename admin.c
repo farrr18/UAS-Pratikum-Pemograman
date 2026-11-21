@@ -102,3 +102,64 @@ void tampilkan_semua_buku(void) {
 
     free(daftar_buku);
 }
+
+void edit_buku(void) {
+    Buku *daftar_buku = NULL;
+    int jumlah_buku = 0;
+    int id_cari;
+    int ditemukan = 0;
+
+    if(!baca_buku(FILE_BUKU, &daftar_buku, &jumlah_buku)) {
+        printf("Gagal membaca data buku!\n");
+        free(daftar_buku);
+        return;
+}
+
+        printf("\n=== EDIT BUKU ===\n");
+        printf("Masukkan ID buku yang ingin diedit: ");
+        scanf("%d", &id_cari);
+        getchar();
+
+        for(int i = 0; i < jumlah_buku; i++){
+            if(daftar_buku[i].id == id_cari) {
+                ditemukan = 1;
+
+            printf("\nData buku ditemukan!\n");
+            printf("Judul lama   : %s\n", daftar_buku[i].judul);
+            printf("Penulis lama : %s\n", daftar_buku[i].penulis);
+
+            printf("\nMasukkan data baru:\n");
+
+            printf("Judul buku   : ");
+            fgets(daftar_buku[i].judul, sizeof(daftar_buku[i].judul), stdin); 
+            daftar_buku[i].judul [strcspn(daftar_buku[i].judul, "\n")] = '\0';
+
+            printf("Penulis   : ");
+            fgets(daftar_buku[i].penulis, sizeof(daftar_buku[i].penulis), stdin); 
+            daftar_buku[i].penulis [strcspn(daftar_buku[i].penulis, "\n")] = '\0';
+
+            printf("Tahun Terbit : ");
+            scanf("%d", &daftar_buku[i].tahun);
+
+            printf("Jumlah Halaman : ");
+            scanf("%d", &daftar_buku[i].halaman);
+
+            printf("Stok buku : ");
+            scanf("%d", &daftar_buku[i].stok);
+
+            if (simpan_buku(FILE_BUKU, daftar_buku, jumlah_buku)) {
+                printf("\nBuku berhasil diperbarui!\n");
+            } else {
+                printf("\nGagal menyimpan perubahan buku!\n");
+            }
+
+            break;
+        }
+    }
+
+    if (!ditemukan) {
+        printf("\nBuku dengan ID %d tidak ditemukan!\n", id_cari);
+    }
+
+    free(daftar_buku);
+}
