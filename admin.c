@@ -163,3 +163,53 @@ void edit_buku(void) {
 
     free(daftar_buku);
 }
+
+void hapus_buku(void){
+    Buku *daftar_buku = NULL;
+    int jumlah_buku = 0;
+    int id_hapus;
+    int ditemukan = 0;
+
+    if (!baca_buku(FILE_BUKU, &daftar_buku, &jumlah_buku)) {
+        printf("Gagal membaca data buku!\n");
+        free(daftar_buku);
+        return;
+    }
+
+    printf("\n=== HAPUS BUKU ===\n");
+    printf("Masukkan ID buku yang ingin dihapus: ");
+    scanf("%d", &id_hapus);
+     
+    for (int i = 0; i < jumlah_buku; i++) {
+        if (daftar_buku[i].id == id_hapus) {
+            ditemukan = 1;
+
+            printf("\nBuku ditemukan!\n");
+            printf("Judul Buku : %s\n", daftar_buku[i].judul);
+            printf("Penulis    : %s\n", daftar_buku[i].penulis);
+
+            for(int j = i; j < jumlah_buku - 1; j++){
+                daftar_buku[j] = daftar_buku[j + 1];
+            }
+
+            jumlah_buku--;
+
+            if (simpan_buku(FILE_BUKU, daftar_buku, jumlah_buku)) {
+                printf("\nBuku berhasil dihapus!\n");
+            } else {
+                printf("\nGagal menghapus buku!\n");
+            }
+
+            break;
+        }
+               
+    }
+
+    if (!ditemukan) {
+        printf("\nBuku dengan ID %d tidak ditemukan!\n", id_hapus);
+    }
+    
+    free(daftar_buku);
+}
+
+    
