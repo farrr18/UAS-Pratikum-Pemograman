@@ -3,6 +3,11 @@
 #include "sorting.h"
 
 void insertion_sort_judul(Buku daftar_buku[], int jumlah_buku){
+
+    if (daftar_buku == NULL || jumlah_buku <= 1){
+        return;
+    }
+
     for(int i = 1; i < jumlah_buku; i++){
         Buku kunci = daftar_buku[i];
         int j = i-1;
@@ -16,22 +21,37 @@ void insertion_sort_judul(Buku daftar_buku[], int jumlah_buku){
     }
 }
 
-void buble_sort_penulis(Buku daftar_buku[], int jumlah_buku){
+void bubble_sort_penulis(Buku daftar_buku[], int jumlah_buku){
+
+    if (daftar_buku == NULL || jumlah_buku <= 1){
+        return;
+    }
+
     for(int i =0; i < jumlah_buku -1; i++){
+        int tukar = 0;
         for(int j = 0; j < jumlah_buku -i -1; j++){
 
             if (strcmp(daftar_buku[j].penulis, daftar_buku[j+1].penulis) > 0){
                 Buku sementara = daftar_buku[j];
                 daftar_buku[j] = daftar_buku[j+1];
                 daftar_buku[j+1] = sementara;
-
+                tukar = 1;
             }
+        }
+
+        if (tukar == 0){
+            break;
         }
     }
 }
 
 
 void selection_sort_tahun(Buku daftar_buku[], int jumlah_buku){
+
+    if (daftar_buku == NULL || jumlah_buku <= 1){
+        return;
+    }
+
     for (int i = 0; i < jumlah_buku -1; i++){
         int indeks_terkecil = i;
 
