@@ -16,7 +16,7 @@ void insertion_sort_judul(Buku daftar_buku[], int jumlah_buku){
     }
 }
 
-void buble_sort_penulisa(Buku daftar_buku[], int jumlah_buku){
+void buble_sort_penulis(Buku daftar_buku[], int jumlah_buku){
     for(int i =0; i < jumlah_buku -1; i++){
         for(int j = 0; j < jumlah_buku -i -1; j++){
 
