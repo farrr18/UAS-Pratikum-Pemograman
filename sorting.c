@@ -32,7 +32,7 @@ void buble_sort_penulis(Buku daftar_buku[], int jumlah_buku){
 
 
 void selection_sort_tahun(Buku daftar_buku[], int jumlah_buku){
-    for (int i = 0; i < jumlah_buku -1, i++){
+    for (int i = 0; i < jumlah_buku -1; i++){
         int indeks_terkecil = i;
 
         for (int j = i +1; j < jumlah_buku; j++){
