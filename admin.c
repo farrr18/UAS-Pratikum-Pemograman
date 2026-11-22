@@ -239,6 +239,51 @@ void laporan_transaksi(void) {
     free(daftar_peminjaman);
     }
     
+    void menu_admin(void) {
+    int pilihan;
+
+    do {
+        printf("\n===== MENU ADMIN =====\n");
+        printf("1. Tambah Buku\n");
+        printf("2. Tampilkan Semua Buku\n");
+        printf("3. Edit Buku\n");
+        printf("4. Hapus Buku\n");
+        printf("5. Laporan Transaksi\n");
+        printf("0. Kembali\n");
+        printf("Pilih menu: ");
+        scanf("%d", &pilihan);
+
+        switch (pilihan) {
+            case 1:
+                tambah_buku();
+                break;
+
+            case 2:
+                tampilkan_semua_buku();
+                break;
+
+            case 3:
+                edit_buku();
+                break;
+
+            case 4:
+                hapus_buku();
+                break;
+
+            case 5:
+                laporan_transaksi();
+                break;
+
+            case 0:
+                printf("Kembali ke menu utama.\n");
+                break;
+
+            default:
+                printf("Pilihan tidak valid!\n");
+        }
+
+    } while (pilihan != 0);
+}
     
 
 
