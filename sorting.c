@@ -30,3 +30,21 @@ void buble_sort_penulisan(Buku daftar_buku[], int jumlah_buku){
     }
 }
 
+
+void selection_sort_tahun(Buku daftar_buku[], int jumlah_buku){
+    for (int i = 0; i < jumlah_buku[], int jumlah_buku){
+        int indeks_terkecil = i;
+
+        for (int j = i +1; j < jumlah_buku; j++){
+            if (daftar_buku[j].tahun < daftar_buku[indeks_terkecil].tahun){
+                indeks_terkecil = j;
+            }
+        }
+
+        if (indeks_terkecil != i){
+            Buku sementara = daftar_buku[i];
+            daftar_buku[i] = daftar_buku[indeks_terkecil];
+            daftar_buku[indeks_terkecil] = sementara;
+        }
+    }
+}
