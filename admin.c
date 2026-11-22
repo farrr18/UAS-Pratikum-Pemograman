@@ -212,4 +212,34 @@ void hapus_buku(void){
     free(daftar_buku);
 }
 
+void laporan_transaksi(void) {
+    Peminjaman *daftar_peminjaman = NULL;
+    int jumlah_peminjaman = 0;
+
+    printf("\n=== LAPORAN TRANSAKSI ===\n");
+
+    if (!baca_peminjaman(FILE_TRANSAKSI, &daftar_peminjaman, &jumlah_peminjaman)) {
+        printf("Gagal membaca data transaksi!\n");
+        free(daftar_peminjaman);
+        return;
+    }
+
+    for (int i = 0; i < jumlah_peminjaman; i++) {
+        printf("\nTransaksi ke-%d\n", i + 1);
+        printf("ID Transaksi   : %d\n", daftar_peminjaman[i].id_transaksi);
+        printf("Username       : %s\n", daftar_peminjaman[i].username);
+        printf("ID Buku        : %d\n", daftar_peminjaman[i].id_buku);
+        printf("Judul Buku     : %s\n", daftar_peminjaman[i].judul_buku);
+        printf("Tanggal Pinjam : %s\n", daftar_peminjaman[i].tanggal_pinjam);
+        printf("Tanggal Kembali: %s\n", daftar_peminjaman[i].tanggal_kembali);
+        printf("Tanggal Pinjam : %s\n", daftar_peminjaman[i].tanggal_pinjam);
+        printf("Status         : %s\n", daftar_peminjaman[i].status);
+    }
+
+    free(daftar_peminjaman);
+    }
+    
+    
+
+
     
