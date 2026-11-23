@@ -2,6 +2,7 @@
 #include <time.h>
 #include <string.h>
 #include <stdlib.h>
+#include <ctype.h>
 #include "penyimpanan.h"
 #include "user.h"
 
@@ -13,6 +14,17 @@ static int pastikan_file_transaksi(void){
     }
 
     fclose(file);
+    return 1;
+}
+
+static int kata_kunci_kosong(const char *teks) {
+    while (*teks != '\0') {
+        if (!isspace((unsigned char)*teks)) {
+            return 0;
+        }
+        teks++;
+    }
+
     return 1;
 }
 
@@ -110,7 +122,7 @@ void cari_buku(void){
     int ditemukan = 0;
 
     printf("\n=== CARI BUKU ===\n");
-    printf("1. Cari bedasarkan ID\n");
+    printf("1. Cari berdasarkan ID\n");
     printf("2. Cari berdsarkan Judul\n");
     printf("3. Cari berdasarkan Penulis\n");
     printf("Pilihan metode pencarian: ");
@@ -147,15 +159,26 @@ void cari_buku(void){
             free(daftar_buku);
             return;
         }
+        int karakter;
+        while ((karakter = getchar()) != '\n' && karakter != EOF);
+
     }
     else if (pilihan == 2){
         printf("Masukkan judul buku: ");
-        fgets(kata_kunci, sizeof(kata_kunci), stdin);
+        if (fgets(kata_kunci, sizeof(kata_kunci), stdin) == NULL) {
+            printf("Gagal membaca judul buku!\n");
+            free(daftar_buku);
+            return;
+        }
         kata_kunci[strcspn(kata_kunci, "\n")] = '\0';
     }
     else if (pilihan == 3){
         printf("Masukan nama penulis: ");
-        fgets(kata_kunci, sizeof(kata_kunci), stdin);
+        if (fgets(kata_kunci, sizeof(kata_kunci), stdin) == NULL) {
+            printf("Gagal membaca nama penulis!\n");
+            free(daftar_buku);
+            return;
+        }
         kata_kunci[strcspn(kata_kunci, "\n")] = '\0';
     }
     else {
@@ -163,7 +186,7 @@ void cari_buku(void){
         free(daftar_buku);
         return;
     }
-    if ((pilihan == 2 || pilihan == 3) && strlen(kata_kunci) == 0){
+    if ((pilihan == 2 || pilihan == 3) && kata_kunci_kosong(kata_kunci)) {
         printf("Kata kunci pencarian tidak boleh kosong!\n");
         free(daftar_buku);
         return;
@@ -233,6 +256,8 @@ void pinjam_buku(const char *username) {
         free(daftar_buku);
         return;
     }
+    int karakter;
+    while ((karakter = getchar()) != '\n' && karakter != EOF);
 
     for (int i = 0; i < jumlah_buku; i++){
         if (daftar_buku[i].id == id_cari){
@@ -406,6 +431,8 @@ void kembalikan_buku(const char *username) {
         free(daftar_pinjam);
         return;
     }
+    int karakter;
+    while ((karakter = getchar()) != '\n' && karakter != EOF);
 
     for (int i = 0; i < jumlah_pinjam; i++) {
         if (daftar_pinjam[i].id_transaksi == id_transaksi && strcmp(daftar_pinjam[i].username, username) == 0) {
