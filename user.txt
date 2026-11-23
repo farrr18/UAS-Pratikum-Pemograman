@@ -1,3 +1,3 @@
 admin admin123 admin
-budi budi123 user
-siti siti123 user
+budi budi12 user
+siti siti12 user
