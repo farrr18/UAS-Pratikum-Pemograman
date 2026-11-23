@@ -1,0 +1,3 @@
+admin admin123 admin
+budi budi123 user
+siti siti123 user
