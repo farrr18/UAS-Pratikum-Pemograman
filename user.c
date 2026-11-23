@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <time.h>
 #include <string.h>
 #include <stdlib.h>
 #include "penyimpanan.h"
@@ -160,4 +161,27 @@ void cari_buku(void){
     }
 
     free(daftar_buku); 
+}
+
+void pinjam_buku(const char *username){
+    Buku *daftar_buku = NULL;
+    Peminjaman *daftar_pinjam = NULL;
+
+    int jumlah_buku = 0;
+    int jumlah_pinjam = 0;
+    int id_cari:
+    int indeks_buku = -1;
+    int id_transaksi = 1;
+
+    printf("\n=== PEMINJAMAN BUKU ===\n");
+
+    if (!baca_buku("katalog.txt", &daftar_buku, &jumlah_buku)){
+        printf("Gagal membaca katalog buku!\n");
+        free(daftar_buku);
+        return;
+    }
+
+    if (jumlah_buku == 0){
+        printf("Katalog buku masih kosong.\n");
+    }
 }
