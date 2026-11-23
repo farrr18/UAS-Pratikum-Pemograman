@@ -68,7 +68,10 @@ int baca_buku(const char *nama_file, Buku **daftar_buku, int *jumlah_buku){
         int n_kolom = pecah_baris(baris, kolom, 10);
         if (n_kolom < 5) continue;
 
-        if (strcmp(kolom[0], "ID") == 0 || strcmp(kolom[0], "id") == 0) {continue;}
+        if (strcmp(kolom[0], "ID") == 0 || strcmp(kolom[0], "id") == 0 || strcmp(kolom[0], "ocaid") == 0) {
+            continue;
+        }
+
         if (count >= kapasitas) {
             kapasitas *= 2;
             Buku *baru = (Buku *)realloc(temp_list, kapasitas * sizeof(Buku));
@@ -80,7 +83,9 @@ int baca_buku(const char *nama_file, Buku **daftar_buku, int *jumlah_buku){
             temp_list = baru;
         }
 
-        temp_list[count].id = atoi(kolom[0]);
+        int id_baca = atoi(kolom[0]);
+        temp_list[count].id = (id_baca > 0) ? id_baca : (count + 1);
+
         strncpy(temp_list[count].judul, kolom[1], sizeof(temp_list[count].judul) - 1);
         temp_list[count].judul[sizeof(temp_list[count].judul) - 1] = '\0';
 
@@ -89,14 +94,19 @@ int baca_buku(const char *nama_file, Buku **daftar_buku, int *jumlah_buku){
 
         temp_list[count].tahun = atoi(kolom[3]);
         temp_list[count].halaman = atoi(kolom[4]);
-        temp_list[count].stok = (n_kolom >= 6) ? atoi(kolom[5]) : 5;
+
+        if (n_kolom >= 6 && isdigit((unsigned char)kolom[5][0])) {
+            temp_list[count].stok = atoi(kolom[5]);
+        } else {
+            temp_list[count].stok = 5;
+        }
+
         count++;
     }
     fclose(fp);
     *daftar_buku = temp_list;
     *jumlah_buku = count;
     return 1;
-
 }
 
 int baca_user(const char *nama_file, User **daftar_user, int *jumlah_user){
