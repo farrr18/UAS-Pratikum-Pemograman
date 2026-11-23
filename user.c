@@ -5,6 +5,17 @@
 #include "penyimpanan.h"
 #include "user.h"
 
+static int pastikan_file_transaksi(void){
+    FILE*file = fopen("peminjaman.txt", "a");
+
+    if (file == NULL){
+        return 0;
+    }
+
+    fclose(file);
+    return 1;
+}
+
 void menu_user(const char *username){
     int pilihan;
 
@@ -19,7 +30,15 @@ void menu_user(const char *username){
         printf("0. Logout\n");
 
         printf("Pilih menu: ");
-        scanf("%d", &pilihan);
+        if (scanf("%d", &pilihan) != 1){
+            printf("Input harus berupa angka!\n");
+
+            int karakter;
+            while((karakter = getchar()) != '\n' && karakter != EOF);
+
+            pilihan =-1;
+            continue;
+        }
 
         switch (pilihan){
             case 1:
@@ -35,11 +54,11 @@ void menu_user(const char *username){
                 break;
 
             case 4:
-                printf("Menu pegembalian buku\n");
+                kembalikan_buku(username);
                 break;
 
             case 5:
-                printf("Menu riwayat peminjaman\n");
+                riwayat_peminjaman(username);
                 break;
 
             case 0:
@@ -94,9 +113,17 @@ void cari_buku(void){
     printf("1. Cari bedasarkan ID\n");
     printf("2. Cari berdsarkan Judul\n");
     printf("3. Cari berdasarkan Penulis\n");
-    printf("Pilihan motide pencarian: ");
-    scanf("%d", &pilihan);
-    getchar();
+    printf("Pilihan metode pencarian: ");
+    if (scanf("%d", &pilihan) != 1){
+        printf("Pilihan harus berupa angka!\n");
+
+        int karakter;
+        while ((karakter = getchar()) != '\n' && karakter != EOF);
+        return;
+    }
+
+    int karakter;
+    while ((karakter = getchar()) != '\n' && karakter != EOF);
 
     if (!baca_buku("katalog.txt", &daftar_buku, &jumlah_buku)){
         printf("Gagal membaca katalog buku!\n");
@@ -112,7 +139,14 @@ void cari_buku(void){
 
     if (pilihan == 1){
         printf("Masukan ID buku: ");
-        scanf("%d", &id_cari);
+        if (scanf("%d", &id_cari) != 1){
+            printf("ID buku harus berupa angka!\n");
+
+            int karakter;
+            while((karakter = getchar()) != '\n' && karakter != EOF);
+            free(daftar_buku);
+            return;
+        }
     }
     else if (pilihan == 2){
         printf("Masukkan judul buku: ");
@@ -126,6 +160,11 @@ void cari_buku(void){
     }
     else {
         printf("Pilihan pencarian tidak valid!\n");
+        free(daftar_buku);
+        return;
+    }
+    if ((pilihan == 2 || pilihan == 3) && strlen(kata_kunci) == 0){
+        printf("Kata kunci pencarian tidak boleh kosong!\n");
         free(daftar_buku);
         return;
     }
@@ -319,8 +358,17 @@ void kembalikan_buku(const char *username) {
 
     printf("\n=== PENGEMBALIAN BUKU ===\n");
 
-    if (!baca_peminjaman("peminjaman.txt",&daftar_pinjam, &jumlah_pinjam)){
+    if (!pastikan_file_transaksi()) {
+        printf("Gagal membuka file transaksi!\n");
+        return;
+    }
+    if (!baca_peminjaman("peminjaman.txt",&daftar_pinjam, &jumlah_pinjam)) {
         printf("Gagal membaca data peminjaman!\n");
+        free(daftar_pinjam);
+        return;
+    }
+    if (jumlah_pinjam == 0) {
+        printf("Belum ada transaksi peminjaman.\n");
         free(daftar_pinjam);
         return;
     }
@@ -444,5 +492,51 @@ void kembalikan_buku(const char *username) {
            daftar_buku[indeks_buku].stok);
 
     free(daftar_buku);
+    free(daftar_pinjam);
+}
+
+void riwayat_peminjaman(const char *username) {
+    Peminjaman *daftar_pinjam = NULL;
+    int jumlah_pinjam = 0;
+    int ditemukan = 0;
+
+    printf("\n=== RIWAYAT PEMINJAMAN ===\n");
+
+    if (!pastikan_file_transaksi()) {
+        printf("Gagal membuka file transaksi!\n");
+        return;
+    }
+    if (!baca_peminjaman("peminjaman.txt", &daftar_pinjam, &jumlah_pinjam)) {
+        printf("Gagal membaca data riwayat peminjaman!\n");
+        free(daftar_pinjam);
+        return;
+    }
+    if (jumlah_pinjam == 0) {
+        printf("Belum ada riwayat peminjaman.\n");
+        free(daftar_pinjam);
+        return;
+    }
+
+    for (int i = 0; i < jumlah_pinjam; i++) {
+
+        if (strcmp(daftar_pinjam[i].username, username) == 0) {
+            ditemukan = 1;
+
+            printf("\n-----------------------------\n");
+            printf("ID Transaksi        : %d\n", daftar_pinjam[i].id_transaksi);
+            printf("ID Buku             : %d\n", daftar_pinjam[i].id_buku);
+            printf("Judul Buku          : %s\n", daftar_pinjam[i].judul_buku);
+            printf("Tanggal Peminjaman  : %s\n", daftar_pinjam[i].tanggal_pinjam);
+            printf("Tanggal Pengembalian: %s\n", daftar_pinjam[i].tanggal_kembali);
+            printf("Status              : %s\n", daftar_pinjam[i].status);
+        }
+    }
+
+    if (!ditemukan) {
+        printf("Belum ada riwayat peminjaman.\n");
+    }
+
+    printf("-----------------------------\n");
+
     free(daftar_pinjam);
 }
