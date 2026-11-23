@@ -73,14 +73,14 @@ Alur singkat:
 ├── admin.h/.c         # Menu dan fitur Admin (CRUD buku, laporan transaksi)
 ├── user.h/.c          # Menu dan fitur User (katalog, cari, pinjam, kembali, riwayat)
 ├── sorting.h/.c       # Insertion, Bubble, dan Selection Sort manual
-├── Books.txt          # Data katalog buku (dataset)
+├── katalog.txt          # Data katalog buku (dataset)
 ├── user.txt           # Data akun (username, password, role)
 └── peminjaman.txt     # Data transaksi peminjaman
 ```
 
 ## Format Data
 
-**`Books.txt`** — dipisahkan spasi, kolom teks diapit tanda petik ganda:
+**`katalog.txt`** — dipisahkan spasi, kolom teks diapit tanda petik ganda:
 ```
 <id> "<judul>" "<penulis>" <tahun> <halaman> <stok>
 ```
@@ -128,7 +128,7 @@ gcc -std=c11 -Wall -Wextra main.c admin.c user.c penyimpanan.c sorting.c -o perp
 ```
 
 > **Penting:** program membaca berkas `.txt` dari direktori tempat program
-> dijalankan, sehingga `Katalog.txt`, `user.txt`, dan `peminjaman.txt` harus
+> dijalankan, sehingga `katalog.txt`, `user.txt`, dan `peminjaman.txt` harus
 > berada di direktori yang sama dengan executable.
 
 ### Cara Penggunaan
