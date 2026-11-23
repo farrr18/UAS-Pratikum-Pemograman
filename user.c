@@ -163,19 +163,18 @@ void cari_buku(void){
     free(daftar_buku); 
 }
 
-void pinjam_buku(const char *username){
+void pinjam_buku(const char *username) {
     Buku *daftar_buku = NULL;
     Peminjaman *daftar_pinjam = NULL;
 
     int jumlah_buku = 0;
     int jumlah_pinjam = 0;
-    int id_cari:
+    int id_cari;
     int indeks_buku = -1;
     int id_transaksi = 1;
 
     printf("\n=== PEMINJAMAN BUKU ===\n");
-
-    if (!baca_buku("katalog.txt", &daftar_buku, &jumlah_buku)){
+    if (!baca_buku("katalog.txt", &daftar_buku, &jumlah_buku)) {
         printf("Gagal membaca katalog buku!\n");
         free(daftar_buku);
         return;
@@ -183,5 +182,125 @@ void pinjam_buku(const char *username){
 
     if (jumlah_buku == 0){
         printf("Katalog buku masih kosong.\n");
+        free(daftar_buku);
+        return;
     }
+
+    printf("Masukkan ID buku yang ingin dipinjam: ");
+    if (scanf("%d", &id_cari) != 1){
+        printf("Input ID tidak valid!\n");
+        while (getchar() != '\n');
+        free(daftar_buku);
+        return;
+    }
+
+    for (int i = 0; i < jumlah_buku; i++){
+        if (daftar_buku[i].id == id_cari){
+            indeks_buku = i;
+            break;
+        }
+    }
+
+    if (indeks_buku == -1){
+        printf("Buku dengan ID tersebut tidak ditemukan!\n");
+        free(daftar_buku);
+        return;
+    }
+
+    if (daftar_buku[indeks_buku].stok <= 0){
+        printf("Maaf, stok buku sedang habis!\n");
+        free(daftar_buku);
+        return;
+    }
+
+    FILE *file = fopen("peminjaman.txt", "a");
+
+    if (file == NULL){
+        printf("Gagal membuka file transaksi!\n");
+        free(daftar_buku);
+        return;
+    }
+
+    fclose(file);
+
+    if (!baca_peminjaman("peminjaman.txt",&daftar_pinjam, &jumlah_pinjam)){
+        printf("Gagal membaca data transaksi!\n");
+        free(daftar_buku);
+        free(daftar_pinjam);
+        return;
+    }
+
+    for (int i = 0; i < jumlah_pinjam; i++){
+        if (daftar_pinjam[i].id_transaksi >= id_transaksi){
+            id_transaksi = daftar_pinjam[i].id_transaksi + 1;
+        }
+    }
+
+    Peminjaman *data_baru = realloc(daftar_pinjam,(jumlah_pinjam + 1) * sizeof(Peminjaman));
+
+    if (data_baru == NULL) {
+        printf("Gagal menambahkan transaksi!\n");
+        free(daftar_buku);
+        free(daftar_pinjam);
+        return;
+    }
+
+    daftar_pinjam = data_baru;
+
+    Peminjaman transaksi_baru;
+
+    transaksi_baru.id_transaksi = id_transaksi;
+    transaksi_baru.id_buku = daftar_buku[indeks_buku].id;
+
+    snprintf(transaksi_baru.username,sizeof(transaksi_baru.username), "%s", username);
+
+    snprintf(transaksi_baru.judul_buku,sizeof(transaksi_baru.judul_buku), "%s",daftar_buku[indeks_buku].judul);
+
+    time_t sekarang = time(NULL);
+    struct tm *waktu = localtime(&sekarang);
+
+    if (waktu == NULL){
+        printf("Gagal mendapatkan tanggal!\n");
+        free(daftar_buku);
+        free(daftar_pinjam);
+        return;
+    }
+
+    strftime(transaksi_baru.tanggal_pinjam,sizeof(transaksi_baru.tanggal_pinjam),"%Y-%m-%d", waktu);
+
+    strcpy(transaksi_baru.tanggal_kembali, "-");
+    strcpy(transaksi_baru.status, "dipinjam");
+
+    daftar_pinjam[jumlah_pinjam] = transaksi_baru;
+    jumlah_pinjam++;
+
+    daftar_buku[indeks_buku].stok--;
+
+    if (!simpan_buku("katalog.txt", daftar_buku, jumlah_buku)){
+        printf("Gagal menyimpan perubahan stok!\n");
+        free(daftar_buku);
+        free(daftar_pinjam);
+        return;
+    }
+
+    if (!simpan_peminjaman("peminjaman.txt",daftar_pinjam, jumlah_pinjam)){
+
+        daftar_buku[indeks_buku].stok++;
+        simpan_buku("katalog.txt", daftar_buku, jumlah_buku);
+
+        printf("Gagal menyimpan transaksi peminjaman!\n");
+        free(daftar_buku);
+        free(daftar_pinjam);
+        return;
+    }
+
+    printf("\nPeminjaman berhasil!\n");
+    printf("ID Transaksi   : %d\n", id_transaksi);
+    printf("Nama Pengguna  : %s\n", username);
+    printf("Judul Buku     : %s\n", daftar_buku[indeks_buku].judul);
+    printf("Tanggal Pinjam : %s\n", transaksi_baru.tanggal_pinjam);
+    printf("Sisa Stok      : %d\n", daftar_buku[indeks_buku].stok);
+
+    free(daftar_buku);
+    free(daftar_pinjam);
 }
