@@ -243,7 +243,7 @@ int simpan_peminjaman(const char *nama_file, Peminjaman *daftar_pinjaman, int ju
 }
 
 int muat_data(Buku **daftar_buku, int *jumlah_buku, User **daftar_user, int *jumlah_user, Peminjaman **daftar_pinjam, int *jumlah_pinjam){
-    int ok_buku = baca_buku("Books.txt", daftar_buku, jumlah_buku);
+    int ok_buku = baca_buku("Katalog.txt", daftar_buku, jumlah_buku);
     int ok_user = baca_user("user.txt", daftar_user, jumlah_user);
     int ok_pinjam = baca_peminjaman("peminjaman.txt", daftar_pinjam, jumlah_pinjam);
     (void)ok_pinjam;
