@@ -3,9 +3,11 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include "sorting.h"
 #include "penyimpanan.h"
 #include "user.h"
 
+static void menu_sorting_user(void);
 static int pastikan_file_transaksi(void){
     FILE*file = fopen("peminjaman.txt", "a");
 
@@ -39,6 +41,7 @@ void menu_user(const char *username){
         printf("3. Pinjam Buku\n");
         printf("4. Kembalikan Buku\n");
         printf("5. Riwayat Peminjaman\n");
+        printf("6. Urutkan Katalog Buku\n");
         printf("0. Logout\n");
 
         printf("Pilih menu: ");
@@ -71,6 +74,10 @@ void menu_user(const char *username){
 
             case 5:
                 riwayat_peminjaman(username);
+                break;
+
+            case 6:
+                menu_sorting_user();
                 break;
 
             case 0:
@@ -123,7 +130,7 @@ void cari_buku(void){
 
     printf("\n=== CARI BUKU ===\n");
     printf("1. Cari berdasarkan ID\n");
-    printf("2. Cari berdsarkan Judul\n");
+    printf("2. Cari berdasarkan Judul\n");
     printf("3. Cari berdasarkan Penulis\n");
     printf("Pilihan metode pencarian: ");
     if (scanf("%d", &pilihan) != 1){
@@ -566,4 +573,88 @@ void riwayat_peminjaman(const char *username) {
     printf("-----------------------------\n");
 
     free(daftar_pinjam);
+}
+
+static void menu_sorting_user(void) {
+    int pilihan_sort;
+
+    Buku *daftar_buku = NULL;
+    int jumlah_buku = 0;
+
+    if (!baca_buku("katalog.txt", &daftar_buku, &jumlah_buku)) {
+        printf("Gagal membaca katalog buku!\n");
+        return;
+    }
+
+    if (jumlah_buku == 0) {
+        printf("Katalog buku masih kosong!\n");
+        free(daftar_buku);
+        return;
+    }
+
+    do {
+        printf("\n=== PENGURUTAN KATALOG ===\n");
+        printf("1. Urutkan berdasarkan Judul (A-Z)\n");
+        printf("2. Urutkan berdasarkan Penulis (A-Z)\n");
+        printf("3. Urutkan berdasarkan Tahun Terbit\n");
+        printf("0. Kembali\n");
+        printf("Pilih menu: ");
+
+        int hasil_input = scanf("%d", &pilihan_sort);
+
+        if (hasil_input != 1) {
+            if (hasil_input == EOF) {
+                break;
+            }
+
+            printf("Input harus berupa angka!\n");
+
+            int karakter;
+            while ((karakter = getchar()) != '\n' && karakter != EOF);
+
+            continue;
+        }
+
+        int karakter;
+        while ((karakter = getchar()) != '\n' && karakter != EOF);
+
+        switch (pilihan_sort) {
+            case 1:
+                insertion_sort_judul(daftar_buku, jumlah_buku);
+                printf("\nKatalog berhasil diurutkan berdasarkan judul!\n");
+                break;
+
+            case 2:
+                bubble_sort_penulis(daftar_buku, jumlah_buku);
+                printf("\nKatalog berhasil diurutkan berdasarkan penulis!\n");
+                break;
+
+            case 3:
+                selection_sort_tahun(daftar_buku, jumlah_buku);
+                printf("\nKatalog berhasil diurutkan berdasarkan tahun terbit!\n");
+                break;
+
+            case 0:
+                printf("Kembali ke menu pengguna.\n");
+                continue;
+
+            default:
+                printf("Pilihan tidak tersedia!\n");
+                continue;
+        }
+
+        printf("\n=== HASIL PENGURUTAN KATALOG ===\n");
+
+        for (int i = 0; i < jumlah_buku; i++) {
+            printf("\nID Buku   : %d\n", daftar_buku[i].id);
+            printf("Judul       : %s\n", daftar_buku[i].judul);
+            printf("Penulis     : %s\n", daftar_buku[i].penulis);
+            printf("Tahun Terbit: %d\n", daftar_buku[i].tahun);
+            printf("Halaman     : %d\n", daftar_buku[i].halaman);
+            printf("Stok        : %d\n", daftar_buku[i].stok);
+        }
+
+    } while (pilihan_sort != 0);
+
+    free(daftar_buku);
 }
