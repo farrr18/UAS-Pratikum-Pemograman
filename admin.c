@@ -8,7 +8,7 @@
 #define PANJANG_BARIS 600
 
 #define FILE_AKUN "user.txt"
-#define FILE_BUKU "Katalog.txt"
+#define FILE_BUKU "katalog.txt"
 #define FILE_TRANSAKSI "peminjaman.txt"
 
 void tambah_buku(void) {
