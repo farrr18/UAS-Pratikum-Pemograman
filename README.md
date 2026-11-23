@@ -12,7 +12,7 @@ Seluruh data disimpan persisten dalam berkas `.txt`.
 | No | Nama Lengkap | NPM | 
 |----|--------------|-----|
 | 1  | _(Afirah El Abidah)_ | _(260810701100002)_ |
-| 2  | _(Azfar Syukri)_ | _(260810701100035)_ |
+| 2  | _(Muhammad Azfar Syukri)_ | _(260810701100035)_ |
 | 3  | _(Cut Riska Dewi)_ | _(260810701100057)_ |
 
 ## Fitur
