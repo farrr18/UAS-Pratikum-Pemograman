@@ -7,5 +7,6 @@ void tampilkan_semua_buku(void);
 void edit_buku(void);
 void hapus_buku(void);
 void laporan_transaksi(void);
+void menu_sorting_admin(void);
 
 #endif
