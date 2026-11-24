@@ -6,6 +6,10 @@
 #include "admin.h"
 #include "user.h"
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 int login(User daftar_user[], int jumlah_user,
           char username_login[], char role_login[]) {
 
