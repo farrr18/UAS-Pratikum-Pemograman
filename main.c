@@ -38,12 +38,21 @@ int login(User daftar_user[], int jumlah_user,
 }
 
 int main() {
+#ifdef _WIN32
+    SetConsoleOutputCP(CP_UTF8);
+    SetConsoleCP(CP_UTF8);
+#endif
 
     User *daftar_user = NULL;
     int jumlah_user = 0;
 
     char username_login[50];
     char role_login[20];
+
+    if (!buat_katalog_awal("Books.txt", "katalog.txt")) {
+        printf("Gagal menyiapkan katalog perpustakaan!\n");
+        return 1;
+    }
 
     if (!baca_user("user.txt", &daftar_user, &jumlah_user)) {
         printf("Gagal membaca data akun!\n");
