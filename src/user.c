@@ -1,668 +1,406 @@
-#include <stdio.h>
-#include <time.h>
-#include <string.h>
-#include <stdlib.h>
 #include <ctype.h>
+#include <limits.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+
 #include "sorting.h"
 #include "penyimpanan.h"
 #include "user.h"
 
-static void menu_sorting_user(void);
-static int pastikan_file_transaksi(void){
-    FILE*file = fopen(PATH_TRANSAKSI, "a");
+static int baca_baris_input(const char *prompt, char *buffer, size_t ukuran) {
+    size_t panjang;
+    printf("%s", prompt);
+    if (fgets(buffer, (int)ukuran, stdin) == NULL) return 0;
 
-    if (file == NULL){
+    panjang = strcspn(buffer, "\r\n");
+    if (buffer[panjang] == '\0' && panjang == ukuran - 1) {
+        int karakter;
+        while ((karakter = getchar()) != '\n' && karakter != EOF) {}
+        printf("Input terlalu panjang.\n");
         return 0;
     }
-
-    fclose(file);
+    buffer[panjang] = '\0';
     return 1;
 }
 
-static int kata_kunci_kosong(const char *teks) {
-    while (*teks != '\0') {
-        if (!isspace((unsigned char)*teks)) {
-            return 0;
-        }
-        teks++;
+static int baca_integer(const char *prompt, int minimum, int maksimum, int *hasil) {
+    char buffer[100];
+    char *akhir;
+    long nilai;
+
+    if (!baca_baris_input(prompt, buffer, sizeof(buffer))) return 0;
+    nilai = strtol(buffer, &akhir, 10);
+    if (buffer == akhir) return 0;
+    while (*akhir != '\0' && isspace((unsigned char)*akhir)) akhir++;
+    if (*akhir != '\0' || nilai < minimum || nilai > maksimum) return 0;
+    *hasil = (int)nilai;
+    return 1;
+}
+
+static int pastikan_file_transaksi(void) {
+    FILE *fp = fopen(PATH_TRANSAKSI, "a");
+    if (fp == NULL) return 0;
+    return fclose(fp) == 0;
+}
+
+static int baca_katalog(Buku **daftar_buku, int *jumlah_buku) {
+    if (!baca_buku(PATH_KATALOG_BUKU, daftar_buku, jumlah_buku)) {
+        printf("Gagal membaca katalog buku.\n");
+        free(*daftar_buku);
+        *daftar_buku = NULL;
+        *jumlah_buku = 0;
+        return 0;
     }
-
+    if (*jumlah_buku == 0) {
+        printf("Katalog buku masih kosong.\n");
+        free(*daftar_buku);
+        *daftar_buku = NULL;
+        return 0;
+    }
     return 1;
 }
 
-void menu_user(const char *username){
-    int pilihan;
+static int cari_indeks_ocaid(const Buku buku[], int jumlah, const char *ocaid) {
+    int i;
+    for (i = 0; i < jumlah; i++) {
+        if (strcmp(buku[i].ocaid, ocaid) == 0) return i;
+    }
+    return -1;
+}
 
-    do{
+static void tampilkan_buku(const Buku *buku) {
+    printf("OCAID       : %s\n", buku->ocaid);
+    printf("Judul       : %s\n", buku->judul);
+    printf("Penulis     : %s\n", buku->penulis);
+    printf("Penerbit    : %s\n", buku->penerbit);
+    printf("Tahun       : %d\n", buku->tahun);
+    printf("Halaman     : %d\n", buku->halaman);
+    printf("Stok        : %d\n", buku->stok);
+}
+
+void menu_user(const char *username) {
+    char baris[80];
+
+    for (;;) {
+        char *akhir;
+        long nilai;
+
         printf("\n=== MENU PENGGUNA ===\n");
-        printf("Selamat datang, %s !\n", username);
+        printf("Selamat datang, %s!\n", username);
         printf("1. Tampilkan Katalog Buku\n");
         printf("2. Cari Buku\n");
         printf("3. Pinjam Buku\n");
         printf("4. Kembalikan Buku\n");
-        printf("5. Riwayat Peminjaman\n");
-        printf("6. Urutkan Katalog Buku\n");
+        printf("5. Daftar Peminjaman Aktif\n");
+        printf("6. Sorting Katalog\n");
         printf("0. Logout\n");
-
         printf("Pilih menu: ");
 
-        int hasil_input = scanf("%d", &pilihan);
-
-        if (hasil_input == EOF) {
-            printf("\nInput berakhir. Keluar dari menu pengguna.\n");
-            break;
+        if (fgets(baris, sizeof(baris), stdin) == NULL) break;
+        nilai = strtol(baris, &akhir, 10);
+        if (baris == akhir) {
+            printf("Input harus berupa angka.\n");
+            continue;
         }
-
-        if (hasil_input != 1) {
-            printf("Input harus berupa angka!\n");
-
-            int karakter;
-            while ((karakter = getchar()) != '\n' && karakter != EOF);
-
-            pilihan = -1;
+        while (*akhir != '\0' && isspace((unsigned char)*akhir)) akhir++;
+        if (*akhir != '\0' || nilai < 0 || nilai > 6) {
+            printf("Pilihan tidak valid. Masukkan angka 0-6.\n");
             continue;
         }
 
-        switch (pilihan){
-            case 1:
-                tampilkan_katalog_user();
+        switch ((int)nilai) {
+            case 1: tampilkan_katalog_user(); break;
+            case 2: cari_buku(); break;
+            case 3: pinjam_buku(username); break;
+            case 4: kembalikan_buku(username); break;
+            case 5: riwayat_peminjaman(username); break;
+            case 6: {
+                Buku *buku = NULL;
+                int jumlah = 0;
+                if (baca_katalog(&buku, &jumlah)) {
+                    menu_sorting_katalog(buku, jumlah);
+                    free(buku);
+                }
                 break;
-
-            case 2:
-                cari_buku();
-                break;
-
-            case 3:
-                pinjam_buku(username);
-                break;
-
-            case 4:
-                kembalikan_buku(username);
-                break;
-
-            case 5:
-                riwayat_peminjaman(username);
-                break;
-
-            case 6:
-                menu_sorting_user();
-                break;
-
+            }
             case 0:
-                printf("Berhasil logout!\n");
-                break;
-
-            default:
-                printf("Pilihan tidak valid!\n");
+                printf("Logout berhasil.\n");
+                return;
         }
-    } while (pilihan != 0);
+    }
 }
 
-void tampilkan_katalog_user(void){
+void tampilkan_katalog_user(void) {
     Buku *daftar_buku = NULL;
     int jumlah_buku = 0;
+    int i;
 
     printf("\n=== DAFTAR KATALOG BUKU ===\n");
+    if (!baca_katalog(&daftar_buku, &jumlah_buku)) return;
 
-    if(!baca_buku(PATH_KATALOG_BUKU, &daftar_buku, &jumlah_buku)){
-        printf("Gagal membaca katalog buku!\n");
-        free(daftar_buku);
-        return;
-    }
-
-    if (jumlah_buku == 0){
-        printf("Belum ada buku dalam katalog.\n");
-        free(daftar_buku);
-        return;
-    }
-
-    for(int i = 0; i <jumlah_buku; i++){
+    for (i = 0; i < jumlah_buku; i++) {
         printf("\nBuku ke-%d\n", i + 1);
-        printf("ID Buku        : %d\n", daftar_buku[i].id);
-        printf("Judul Buku     : %s\n", daftar_buku[i].judul);
-        printf("Penulis        : %s\n", daftar_buku[i].penulis);
-        printf("Tahun Terbit   : %d\n", daftar_buku[i].tahun);
-        printf("Jumlah Halaman : %d\n", daftar_buku[i].halaman);
-        printf("Stok Buku      : %d\n", daftar_buku[i].stok);
+        tampilkan_buku(&daftar_buku[i]);
     }
     free(daftar_buku);
 }
 
-void cari_buku(void){
+void cari_buku(void) {
     Buku *daftar_buku = NULL;
     int jumlah_buku = 0;
-    int pilihan;
-    int id_cari;
-    char kata_kunci[256];
-    int ditemukan = 0;
+    int pilihan, i, ditemukan = 0;
+    char kata_kunci[MAX_FIELD];
 
     printf("\n=== CARI BUKU ===\n");
-    printf("1. Cari berdasarkan ID\n");
-    printf("2. Cari berdasarkan Judul\n");
-    printf("3. Cari berdasarkan Penulis\n");
-    printf("Pilihan metode pencarian: ");
-    if (scanf("%d", &pilihan) != 1){
-        printf("Pilihan harus berupa angka!\n");
-
-        int karakter;
-        while ((karakter = getchar()) != '\n' && karakter != EOF);
+    printf("1. Cari berdasarkan OCAID\n");
+    printf("2. Cari berdasarkan judul\n");
+    printf("3. Cari berdasarkan penulis (tambahan)\n");
+    if (!baca_integer("Pilihan pencarian: ", 1, 3, &pilihan)) {
+        printf("Pilihan pencarian tidak valid.\n");
         return;
     }
+    if (!baca_katalog(&daftar_buku, &jumlah_buku)) return;
 
-    int karakter;
-    while ((karakter = getchar()) != '\n' && karakter != EOF);
-
-    if (!baca_buku(PATH_KATALOG_BUKU, &daftar_buku, &jumlah_buku)){
-        printf("Gagal membaca katalog buku!\n");
+    if (!baca_baris_input("Masukkan kata kunci: ", kata_kunci, sizeof(kata_kunci)) || kata_kunci[0] == '\0') {
+        printf("Kata kunci tidak boleh kosong.\n");
         free(daftar_buku);
         return;
     }
 
-    if (jumlah_buku == 0){
-        printf("Katalog buku masih kosong.\n");
-        free(daftar_buku);
-        return;
-    }
-
-    if (pilihan == 1){
-        printf("Masukan ID buku: ");
-        if (scanf("%d", &id_cari) != 1){
-            printf("ID buku harus berupa angka!\n");
-
-            int karakter;
-            while((karakter = getchar()) != '\n' && karakter != EOF);
-            free(daftar_buku);
-            return;
-        }
-        int karakter;
-        while ((karakter = getchar()) != '\n' && karakter != EOF);
-
-    }
-    else if (pilihan == 2){
-        printf("Masukkan judul buku: ");
-        if (fgets(kata_kunci, sizeof(kata_kunci), stdin) == NULL) {
-            printf("Gagal membaca judul buku!\n");
-            free(daftar_buku);
-            return;
-        }
-        kata_kunci[strcspn(kata_kunci, "\n")] = '\0';
-    }
-    else if (pilihan == 3){
-        printf("Masukan nama penulis: ");
-        if (fgets(kata_kunci, sizeof(kata_kunci), stdin) == NULL) {
-            printf("Gagal membaca nama penulis!\n");
-            free(daftar_buku);
-            return;
-        }
-        kata_kunci[strcspn(kata_kunci, "\n")] = '\0';
-    }
-    else {
-        printf("Pilihan pencarian tidak valid!\n");
-        free(daftar_buku);
-        return;
-    }
-    if ((pilihan == 2 || pilihan == 3) && kata_kunci_kosong(kata_kunci)) {
-        printf("Kata kunci pencarian tidak boleh kosong!\n");
-        free(daftar_buku);
-        return;
-    }
-
-    for (int i = 0; i < jumlah_buku; i++){
+    for (i = 0; i < jumlah_buku; i++) {
         int cocok = 0;
+        if (pilihan == 1) cocok = strcmp(daftar_buku[i].ocaid, kata_kunci) == 0;
+        else if (pilihan == 2) cocok = strstr(daftar_buku[i].judul, kata_kunci) != NULL;
+        else cocok = strstr(daftar_buku[i].penulis, kata_kunci) != NULL;
 
-        if(pilihan == 1 && daftar_buku[i].id == id_cari){
-            cocok = 1;
-        }
-        else if(pilihan == 2 && strstr(daftar_buku[i].judul, kata_kunci) != NULL){
-            cocok = 1;
-        }
-        else if (pilihan == 3 && strstr(daftar_buku[i].penulis, kata_kunci) != NULL){
-            cocok = 1;
-        }
-
-        if (cocok){
+        if (cocok) {
             ditemukan = 1;
-
-            printf("\nBuku ditemukan!\n");
-            printf("ID Buku         : %d\n", daftar_buku[i].id);
-            printf("Judul buku      : %s\n", daftar_buku[i].judul);
-            printf("Penulis         : %s\n", daftar_buku[i].penulis);
-            printf("Tahun terbit    : %d\n", daftar_buku[i].tahun);
-            printf("Jumlah Halaman  : %d\n", daftar_buku[i].halaman);
-            printf("Stok Buku       : %d\n", daftar_buku[i].stok);
+            printf("\nBuku ditemukan:\n");
+            tampilkan_buku(&daftar_buku[i]);
         }
     }
-
-    if(!ditemukan){
-        printf("\nBuku yang dicari tidak ditemukan.\n");
-    }
-
-    free(daftar_buku); 
+    if (!ditemukan) printf("Buku tidak ditemukan.\n");
+    free(daftar_buku);
 }
 
 void pinjam_buku(const char *username) {
-    Buku *daftar_buku = NULL;
-    Peminjaman *daftar_pinjam = NULL;
-
-    int jumlah_buku = 0;
-    int jumlah_pinjam = 0;
-    int id_cari;
-    int indeks_buku = -1;
-    int id_transaksi = 1;
+    Buku *buku = NULL;
+    Peminjaman *transaksi = NULL;
+    int jumlah_buku = 0, jumlah_transaksi = 0;
+    int indeks_buku, i;
+    unsigned int id_transaksi = 1;
+    char ocaid[64];
+    Peminjaman baru;
+    time_t sekarang;
+    struct tm *waktu;
 
     printf("\n=== PEMINJAMAN BUKU ===\n");
-    if (!baca_buku(PATH_KATALOG_BUKU, &daftar_buku, &jumlah_buku)) {
-        printf("Gagal membaca katalog buku!\n");
-        free(daftar_buku);
+    if (!baca_katalog(&buku, &jumlah_buku)) return;
+    if (!baca_baris_input("Masukkan OCAID buku yang ingin dipinjam: ", ocaid, sizeof(ocaid))) {
+        free(buku);
         return;
     }
 
-    if (jumlah_buku == 0){
-        printf("Katalog buku masih kosong.\n");
-        free(daftar_buku);
+    indeks_buku = cari_indeks_ocaid(buku, jumlah_buku, ocaid);
+    if (indeks_buku < 0) {
+        printf("Buku dengan OCAID tersebut tidak ditemukan.\n");
+        free(buku);
+        return;
+    }
+    if (buku[indeks_buku].stok <= 0) {
+        printf("Stok buku sedang habis.\n");
+        free(buku);
+        return;
+    }
+    if (!pastikan_file_transaksi() || !baca_peminjaman(PATH_TRANSAKSI, &transaksi, &jumlah_transaksi)) {
+        printf("Gagal membaca atau menyiapkan file transaksi.\n");
+        free(buku);
+        free(transaksi);
         return;
     }
 
-    printf("Masukkan ID buku yang ingin dipinjam: ");
-    if (scanf("%d", &id_cari) != 1){
-        printf("Input ID tidak valid!\n");
-        int karakter;
-        while ((karakter = getchar()) != '\n' && karakter != EOF);
-        free(daftar_buku);
-        return;
-    }
-    int karakter;
-    while ((karakter = getchar()) != '\n' && karakter != EOF);
-
-    for (int i = 0; i < jumlah_buku; i++){
-        if (daftar_buku[i].id == id_cari){
-            indeks_buku = i;
-            break;
+    for (i = 0; i < jumlah_transaksi; i++) {
+        if (transaksi[i].id_transaksi >= id_transaksi) {
+            if (transaksi[i].id_transaksi == UINT_MAX) {
+                printf("Nomor transaksi sudah mencapai batas maksimum.\n");
+                free(buku);
+                free(transaksi);
+                return;
+            }
+            id_transaksi = transaksi[i].id_transaksi + 1;
         }
     }
 
-    if (indeks_buku == -1){
-        printf("Buku dengan ID tersebut tidak ditemukan!\n");
-        free(daftar_buku);
-        return;
-    }
-
-    if (daftar_buku[indeks_buku].stok <= 0){
-        printf("Maaf, stok buku sedang habis!\n");
-        free(daftar_buku);
-        return;
-    }
-
-    FILE *file = fopen(PATH_TRANSAKSI, "a");
-
-    if (file == NULL){
-        printf("Gagal membuka file transaksi!\n");
-        free(daftar_buku);
-        return;
-    }
-
-    fclose(file);
-
-    if (!baca_peminjaman(PATH_TRANSAKSI,&daftar_pinjam, &jumlah_pinjam)){
-        printf("Gagal membaca data transaksi!\n");
-        free(daftar_buku);
-        free(daftar_pinjam);
-        return;
-    }
-
-    for (int i = 0; i < jumlah_pinjam; i++){
-        if (daftar_pinjam[i].id_transaksi >= id_transaksi){
-            id_transaksi = daftar_pinjam[i].id_transaksi + 1;
+    {
+        Peminjaman *baru_alokasi = (Peminjaman *)realloc(
+            transaksi, (size_t)(jumlah_transaksi + 1) * sizeof(Peminjaman));
+        if (baru_alokasi == NULL) {
+            printf("Memori tidak cukup untuk membuat transaksi.\n");
+            free(buku);
+            free(transaksi);
+            return;
         }
+        transaksi = baru_alokasi;
     }
 
-    Peminjaman *data_baru = realloc(daftar_pinjam,(jumlah_pinjam + 1) * sizeof(Peminjaman));
+    memset(&baru, 0, sizeof(baru));
+    baru.id_transaksi = id_transaksi;
+    snprintf(baru.username, sizeof(baru.username), "%s", username);
+    snprintf(baru.ocaid, sizeof(baru.ocaid), "%s", buku[indeks_buku].ocaid);
+    snprintf(baru.judul_buku, sizeof(baru.judul_buku), "%s", buku[indeks_buku].judul);
 
-    if (data_baru == NULL) {
-        printf("Gagal menambahkan transaksi!\n");
-        free(daftar_buku);
-        free(daftar_pinjam);
+    sekarang = time(NULL);
+    waktu = localtime(&sekarang);
+    if (waktu == NULL || strftime(baru.tanggal_pinjam, sizeof(baru.tanggal_pinjam), "%d-%m-%Y", waktu) == 0) {
+        printf("Gagal mendapatkan tanggal peminjaman.\n");
+        free(buku);
+        free(transaksi);
+        return;
+    }
+    strcpy(baru.tanggal_kembali, "-");
+    strcpy(baru.status, "DIPINJAM");
+
+    transaksi[jumlah_transaksi] = baru;
+    jumlah_transaksi++;
+    buku[indeks_buku].stok--;
+
+    if (!simpan_buku(PATH_KATALOG_BUKU, buku, jumlah_buku)) {
+        printf("Gagal menyimpan perubahan stok.\n");
+        free(buku);
+        free(transaksi);
+        return;
+    }
+    if (!simpan_peminjaman(PATH_TRANSAKSI, transaksi, jumlah_transaksi)) {
+        buku[indeks_buku].stok++;
+        simpan_buku(PATH_KATALOG_BUKU, buku, jumlah_buku);
+        printf("Gagal menyimpan transaksi. Perubahan stok dibatalkan.\n");
+        free(buku);
+        free(transaksi);
         return;
     }
 
-    daftar_pinjam = data_baru;
-
-    Peminjaman transaksi_baru;
-
-    transaksi_baru.id_transaksi = id_transaksi;
-    transaksi_baru.id_buku = daftar_buku[indeks_buku].id;
-
-    snprintf(transaksi_baru.username,sizeof(transaksi_baru.username), "%s", username);
-
-    snprintf(transaksi_baru.judul_buku,sizeof(transaksi_baru.judul_buku), "%s",daftar_buku[indeks_buku].judul);
-
-    time_t sekarang = time(NULL);
-    struct tm *waktu = localtime(&sekarang);
-
-    if (waktu == NULL){
-        printf("Gagal mendapatkan tanggal!\n");
-        free(daftar_buku);
-        free(daftar_pinjam);
-        return;
-    }
-
-    strftime(transaksi_baru.tanggal_pinjam,sizeof(transaksi_baru.tanggal_pinjam),"%Y-%m-%d", waktu);
-
-    strcpy(transaksi_baru.tanggal_kembali, "-");
-    strcpy(transaksi_baru.status, "dipinjam");
-
-    daftar_pinjam[jumlah_pinjam] = transaksi_baru;
-    jumlah_pinjam++;
-
-    daftar_buku[indeks_buku].stok--;
-
-    if (!simpan_buku(PATH_KATALOG_BUKU, daftar_buku, jumlah_buku)){
-        printf("Gagal menyimpan perubahan stok!\n");
-        free(daftar_buku);
-        free(daftar_pinjam);
-        return;
-    }
-
-    if (!simpan_peminjaman(PATH_TRANSAKSI,daftar_pinjam, jumlah_pinjam)){
-
-        daftar_buku[indeks_buku].stok++;
-        simpan_buku(PATH_KATALOG_BUKU, daftar_buku, jumlah_buku);
-
-        printf("Gagal menyimpan transaksi peminjaman!\n");
-        free(daftar_buku);
-        free(daftar_pinjam);
-        return;
-    }
-
-    printf("\nPeminjaman berhasil!\n");
-    printf("ID Transaksi   : %d\n", id_transaksi);
-    printf("Nama Pengguna  : %s\n", username);
-    printf("Judul Buku     : %s\n", daftar_buku[indeks_buku].judul);
-    printf("Tanggal Pinjam : %s\n", transaksi_baru.tanggal_pinjam);
-    printf("Sisa Stok      : %d\n", daftar_buku[indeks_buku].stok);
-
-    free(daftar_buku);
-    free(daftar_pinjam);
+    printf("Peminjaman berhasil. ID transaksi: %u\n", id_transaksi);
+    printf("Judul: %s\nSisa stok: %d\n", buku[indeks_buku].judul, buku[indeks_buku].stok);
+    free(buku);
+    free(transaksi);
 }
 
-
 void kembalikan_buku(const char *username) {
-    Buku *daftar_buku = NULL;
-    Peminjaman *daftar_pinjam = NULL;
-
-    int jumlah_buku = 0;
-    int jumlah_pinjam = 0;
-    int id_transaksi;
-    int indeks_transaksi = -1;
-    int indeks_buku = -1;
+    Buku *buku = NULL;
+    Peminjaman *transaksi = NULL;
+    int jumlah_buku = 0, jumlah_transaksi = 0;
+    int indeks_transaksi = -1, indeks_buku = -1;
+    int i, id_input;
+    time_t sekarang;
+    struct tm *waktu;
+    char tanggal_kembali[20];
 
     printf("\n=== PENGEMBALIAN BUKU ===\n");
-
-    if (!pastikan_file_transaksi()) {
-        printf("Gagal membuka file transaksi!\n");
-        return;
-    }
-    if (!baca_peminjaman(PATH_TRANSAKSI,&daftar_pinjam, &jumlah_pinjam)) {
-        printf("Gagal membaca data peminjaman!\n");
-        free(daftar_pinjam);
-        return;
-    }
-    if (jumlah_pinjam == 0) {
-        printf("Belum ada transaksi peminjaman.\n");
-        free(daftar_pinjam);
+    if (!pastikan_file_transaksi() || !baca_peminjaman(PATH_TRANSAKSI, &transaksi, &jumlah_transaksi)) {
+        printf("Gagal membaca data transaksi.\n");
+        free(transaksi);
         return;
     }
 
-    printf("\n=== DAFTAR BUKU YANG BELUM DIKEMBALIKAN ===\n");
-
-    int ada_pinjaman = 0;
-
-    for (int i = 0; i < jumlah_pinjam; i++) {
-        if (strcmp(daftar_pinjam[i].username, username) == 0 &&
-            strcmp(daftar_pinjam[i].status, "dipinjam") == 0) {
-
-            ada_pinjaman = 1;
-
-            printf("\nID Transaksi  : %d\n", daftar_pinjam[i].id_transaksi);
-            printf("ID Buku         : %d\n", daftar_pinjam[i].id_buku);
-            printf("Judul Buku      : %s\n", daftar_pinjam[i].judul_buku);
-            printf("Tanggal Pinjam  : %s\n", daftar_pinjam[i].tanggal_pinjam);
-            printf("Status          : %s\n", daftar_pinjam[i].status);
+    printf("\n=== BUKU YANG MASIH DIPINJAM ===\n");
+    for (i = 0; i < jumlah_transaksi; i++) {
+        if (strcmp(transaksi[i].username, username) == 0 && strcmp(transaksi[i].status, "DIPINJAM") == 0) {
+            printf("ID Transaksi: %u | OCAID: %s | Judul: %s | Tanggal: %s\n",
+                   transaksi[i].id_transaksi, transaksi[i].ocaid,
+                   transaksi[i].judul_buku, transaksi[i].tanggal_pinjam);
         }
     }
 
-    if (!ada_pinjaman) {
-        printf("Tidak ada buku yang perlu dikembalikan.\n");
-        free(daftar_pinjam);
+    if (!baca_integer("Masukkan ID transaksi yang ingin dikembalikan: ", 1, INT_MAX, &id_input)) {
+        printf("ID transaksi tidak valid.\n");
+        free(transaksi);
         return;
     }
 
-    printf("\nMasukkan ID transaksi yang ingin dikembalikan: ");
-
-    if (scanf("%d", &id_transaksi) != 1) {
-        printf("Input ID transaksi tidak valid!\n");
-        int karakter;
-        while ((karakter = getchar()) != '\n' && karakter != EOF);
-        free(daftar_pinjam);
-        return;
-    }
-    int karakter;
-    while ((karakter = getchar()) != '\n' && karakter != EOF);
-
-    for (int i = 0; i < jumlah_pinjam; i++) {
-        if (daftar_pinjam[i].id_transaksi == id_transaksi && strcmp(daftar_pinjam[i].username, username) == 0) {
+    for (i = 0; i < jumlah_transaksi; i++) {
+        if (transaksi[i].id_transaksi == (unsigned int)id_input &&
+            strcmp(transaksi[i].username, username) == 0) {
             indeks_transaksi = i;
             break;
         }
     }
-
-    if (indeks_transaksi == -1) {
-        printf("Transaksi tidak ditemukan atau bukan milik Anda!\n");
-        free(daftar_pinjam);
+    if (indeks_transaksi < 0 || strcmp(transaksi[indeks_transaksi].status, "DIPINJAM") != 0) {
+        printf("Transaksi tidak ditemukan, bukan milik Anda, atau sudah dikembalikan.\n");
+        free(transaksi);
         return;
     }
 
-    if (strcmp(daftar_pinjam[indeks_transaksi].status, "dipinjam") != 0) {
-        printf("Buku pada transaksi ini sudah dikembalikan!\n");
-        free(daftar_pinjam);
+    if (!baca_katalog(&buku, &jumlah_buku)) {
+        free(transaksi);
+        return;
+    }
+    indeks_buku = cari_indeks_ocaid(buku, jumlah_buku, transaksi[indeks_transaksi].ocaid);
+    if (indeks_buku < 0) {
+        printf("Buku tidak ditemukan pada katalog. Pengembalian dibatalkan.\n");
+        free(buku);
+        free(transaksi);
         return;
     }
 
-    if (!baca_buku(PATH_KATALOG_BUKU, &daftar_buku, &jumlah_buku)) {
-        printf("Gagal membaca katalog buku!\n");
-        free(daftar_pinjam);
-        free(daftar_buku);
+    sekarang = time(NULL);
+    waktu = localtime(&sekarang);
+    if (waktu == NULL || strftime(tanggal_kembali, sizeof(tanggal_kembali), "%d-%m-%Y", waktu) == 0) {
+        printf("Gagal mendapatkan tanggal pengembalian.\n");
+        free(buku);
+        free(transaksi);
         return;
     }
 
-    for (int i = 0; i < jumlah_buku; i++) {
-        if (daftar_buku[i].id == daftar_pinjam[indeks_transaksi].id_buku) {
-            indeks_buku = i;
-            break;
-        }
-    }
+    buku[indeks_buku].stok++;
+    strcpy(transaksi[indeks_transaksi].tanggal_kembali, tanggal_kembali);
+    strcpy(transaksi[indeks_transaksi].status, "KEMBALI");
 
-    if (indeks_buku == -1) {
-        printf("Data buku tidak ditemukan dalam katalog!\n");
-        free(daftar_buku);
-        free(daftar_pinjam);
+    if (!simpan_buku(PATH_KATALOG_BUKU, buku, jumlah_buku)) {
+        printf("Gagal menyimpan stok buku.\n");
+        free(buku);
+        free(transaksi);
+        return;
+    }
+    if (!simpan_peminjaman(PATH_TRANSAKSI, transaksi, jumlah_transaksi)) {
+        buku[indeks_buku].stok--;
+        strcpy(transaksi[indeks_transaksi].tanggal_kembali, "-");
+        strcpy(transaksi[indeks_transaksi].status, "DIPINJAM");
+        simpan_buku(PATH_KATALOG_BUKU, buku, jumlah_buku);
+        printf("Gagal menyimpan transaksi pengembalian. Perubahan dibatalkan.\n");
+        free(buku);
+        free(transaksi);
         return;
     }
 
-    time_t sekarang = time(NULL);
-    struct tm *waktu = localtime(&sekarang);
-
-    if (waktu == NULL) {
-        printf("Gagal mendapatkan tanggal!\n");
-        free(daftar_buku);
-        free(daftar_pinjam);
-        return;
-    }
-
-    char tanggal_kembali[20];
-
-    strftime(tanggal_kembali, sizeof(tanggal_kembali),"%Y-%m-%d", waktu);
-    strcpy(daftar_pinjam[indeks_transaksi].tanggal_kembali,tanggal_kembali);
-    strcpy(daftar_pinjam[indeks_transaksi].status,"dikembalikan");
-
-    daftar_buku[indeks_buku].stok++;
-
-    if (!simpan_buku(PATH_KATALOG_BUKU, daftar_buku, jumlah_buku)) {
-        printf("Gagal menyimpan perubahan stok buku!\n");
-        free(daftar_buku);
-        free(daftar_pinjam);
-        return;
-    }
-
-    if (!simpan_peminjaman(PATH_TRANSAKSI,daftar_pinjam, jumlah_pinjam)) {
-
-        daftar_buku[indeks_buku].stok--;
-        simpan_buku(PATH_KATALOG_BUKU, daftar_buku, jumlah_buku);
-
-        printf("Gagal menyimpan data pengembalian!\n");
-        free(daftar_buku);
-        free(daftar_pinjam);
-        return;
-    }
-
-    printf("\nPengembalian buku berhasil!\n");
-    printf("ID Transaksi       : %d\n", id_transaksi);
-    printf("Judul Buku         : %s\n",
-           daftar_pinjam[indeks_transaksi].judul_buku);
-    printf("Tanggal Pengembalian: %s\n", tanggal_kembali);
-    printf("Stok Buku Sekarang : %d\n",
-           daftar_buku[indeks_buku].stok);
-
-    free(daftar_buku);
-    free(daftar_pinjam);
+    printf("Pengembalian berhasil. Judul: %s | Stok sekarang: %d\n",
+           transaksi[indeks_transaksi].judul_buku, buku[indeks_buku].stok);
+    free(buku);
+    free(transaksi);
 }
 
 void riwayat_peminjaman(const char *username) {
-    Peminjaman *daftar_pinjam = NULL;
-    int jumlah_pinjam = 0;
-    int ditemukan = 0;
+    Peminjaman *transaksi = NULL;
+    int jumlah = 0, i, ditemukan = 0;
 
-    printf("\n=== RIWAYAT PEMINJAMAN ===\n");
-
-    if (!pastikan_file_transaksi()) {
-        printf("Gagal membuka file transaksi!\n");
-        return;
-    }
-    if (!baca_peminjaman(PATH_TRANSAKSI, &daftar_pinjam, &jumlah_pinjam)) {
-        printf("Gagal membaca data riwayat peminjaman!\n");
-        free(daftar_pinjam);
-        return;
-    }
-    if (jumlah_pinjam == 0) {
-        printf("Belum ada riwayat peminjaman.\n");
-        free(daftar_pinjam);
+    if (!pastikan_file_transaksi() || !baca_peminjaman(PATH_TRANSAKSI, &transaksi, &jumlah)) {
+        printf("Gagal membaca data transaksi.\n");
+        free(transaksi);
         return;
     }
 
-    for (int i = 0; i < jumlah_pinjam; i++) {
-
-        if (strcmp(daftar_pinjam[i].username, username) == 0) {
+    printf("\n=== DAFTAR PEMINJAMAN AKTIF ===\n");
+    for (i = 0; i < jumlah; i++) {
+        if (strcmp(transaksi[i].username, username) == 0 && strcmp(transaksi[i].status, "DIPINJAM") == 0) {
             ditemukan = 1;
-
-            printf("\n-----------------------------\n");
-            printf("ID Transaksi        : %d\n", daftar_pinjam[i].id_transaksi);
-            printf("ID Buku             : %d\n", daftar_pinjam[i].id_buku);
-            printf("Judul Buku          : %s\n", daftar_pinjam[i].judul_buku);
-            printf("Tanggal Peminjaman  : %s\n", daftar_pinjam[i].tanggal_pinjam);
-            printf("Tanggal Pengembalian: %s\n", daftar_pinjam[i].tanggal_kembali);
-            printf("Status              : %s\n", daftar_pinjam[i].status);
+            printf("\nID Transaksi   : %u\n", transaksi[i].id_transaksi);
+            printf("OCAID          : %s\n", transaksi[i].ocaid);
+            printf("Judul Buku     : %s\n", transaksi[i].judul_buku);
+            printf("Tanggal Pinjam : %s\n", transaksi[i].tanggal_pinjam);
+            printf("Status         : %s\n", transaksi[i].status);
         }
     }
-
-    if (!ditemukan) {
-        printf("Belum ada riwayat peminjaman.\n");
-    }
-
-    printf("-----------------------------\n");
-
-    free(daftar_pinjam);
-}
-
-static void menu_sorting_user(void) {
-    int pilihan_sort;
-
-    Buku *daftar_buku = NULL;
-    int jumlah_buku = 0;
-
-    if (!baca_buku(PATH_KATALOG_BUKU, &daftar_buku, &jumlah_buku)) {
-        printf("Gagal membaca katalog buku!\n");
-        return;
-    }
-
-    if (jumlah_buku == 0) {
-        printf("Katalog buku masih kosong!\n");
-        free(daftar_buku);
-        return;
-    }
-
-    do {
-        printf("\n=== PENGURUTAN KATALOG ===\n");
-        printf("1. Urutkan berdasarkan Judul (A-Z)\n");
-        printf("2. Urutkan berdasarkan Penulis (A-Z)\n");
-        printf("3. Urutkan berdasarkan Tahun Terbit\n");
-        printf("0. Kembali\n");
-        printf("Pilih menu: ");
-
-        int hasil_input = scanf("%d", &pilihan_sort);
-
-        if (hasil_input != 1) {
-            if (hasil_input == EOF) {
-                break;
-            }
-
-            printf("Input harus berupa angka!\n");
-
-            int karakter;
-            while ((karakter = getchar()) != '\n' && karakter != EOF);
-
-            continue;
-        }
-
-        int karakter;
-        while ((karakter = getchar()) != '\n' && karakter != EOF);
-
-        switch (pilihan_sort) {
-            case 1:
-                insertion_sort_judul(daftar_buku, jumlah_buku);
-                printf("\nKatalog berhasil diurutkan berdasarkan judul!\n");
-                break;
-
-            case 2:
-                bubble_sort_penulis(daftar_buku, jumlah_buku);
-                printf("\nKatalog berhasil diurutkan berdasarkan penulis!\n");
-                break;
-
-            case 3:
-                selection_sort_tahun(daftar_buku, jumlah_buku);
-                printf("\nKatalog berhasil diurutkan berdasarkan tahun terbit!\n");
-                break;
-
-            case 0:
-                printf("Kembali ke menu pengguna.\n");
-                continue;
-
-            default:
-                printf("Pilihan tidak tersedia!\n");
-                continue;
-        }
-
-        printf("\n=== HASIL PENGURUTAN KATALOG ===\n");
-
-        for (int i = 0; i < jumlah_buku; i++) {
-            printf("\nID Buku   : %d\n", daftar_buku[i].id);
-            printf("Judul       : %s\n", daftar_buku[i].judul);
-            printf("Penulis     : %s\n", daftar_buku[i].penulis);
-            printf("Tahun Terbit: %d\n", daftar_buku[i].tahun);
-            printf("Halaman     : %d\n", daftar_buku[i].halaman);
-            printf("Stok        : %d\n", daftar_buku[i].stok);
-        }
-
-    } while (pilihan_sort != 0);
-
-    free(daftar_buku);
+    if (!ditemukan) printf("Tidak ada buku yang sedang Anda pinjam.\n");
+    free(transaksi);
 }

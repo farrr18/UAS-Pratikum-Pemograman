@@ -1,142 +1,179 @@
 # Sistem Manajemen Perpustakaan Berbasis CLI
 
-Project UAS Praktikum Pemrograman Kelas A — Program Studi Informatika,
-FMIPA Universitas Syiah Kuala (2026).
+Project UAS Praktikum Pemrograman Kelas A — Program Studi Informatika, FMIPA Universitas Syiah Kuala (2026).
 
-Aplikasi CLI berbahasa C untuk mengelola katalog buku dan sirkulasi peminjaman,
-dengan dua peran: **Admin (Pustakawan)** dan **User (Anggota/Mahasiswa)**.
-Seluruh data disimpan persisten dalam berkas `.txt`.
+Aplikasi Command Line Interface (CLI) menggunakan bahasa C untuk mengelola katalog buku dan sirkulasi peminjaman. Aplikasi memiliki dua peran, yaitu Admin (Pustakawan) dan User (Anggota/Mahasiswa). Data disimpan secara persisten dalam berkas teks `.txt`.
 
 ## Anggota Kelompok
 
-| No | Nama Lengkap | NPM | 
-|----|--------------|-----|
-| 1  | _(Afirah El Abidah)_ | _(260810701100002)_ |
-| 2  | _(Muhammad Azfar Syukri)_ | _(260810701100035)_ |
-| 3  | _(Cut Riska Dewi)_ | _(260810701100057)_ |
+| No | Nama Lengkap | NPM |
+|---|---|---|
+| 1 | Afirah El Abidah | 260810701100002 |
+| 2 | Muhammad Azfar Syukri | 260810701100035 |
+| 3 | Cut Riska Dewi | 260810701100057 |
 
-## Fitur
+## Fitur Aplikasi
 
-**Admin**
-- Create: tambah buku baru ke katalog
-- Read: tampilkan seluruh koleksi beserta atribut dan stok
-- Update: ubah judul, penulis, tahun, halaman, dan stok buku
-- Delete: hapus buku dari katalog
-- Laporan transaksi: riwayat peminjaman seluruh user
-- Sorting katalog
+### Admin
+- Menambahkan buku ke katalog (OCAID, judul, penulis, penerbit, tahun, halaman, dan stok).
+- Menampilkan seluruh koleksi beserta atribut dan stok.
+- Memperbarui judul, penulis, penerbit, tahun terbit, halaman, dan stok.
+- Menghapus buku; buku yang masih memiliki peminjaman aktif tidak dapat dihapus.
+- Melihat laporan transaksi seluruh pengguna.
+- Mengurutkan katalog menggunakan menu sorting yang sama dengan User.
 
-**User**
-- Lihat katalog buku yang tersedia
-- Cari buku berdasarkan ID atau judul
-- Pinjam buku (stok > 0, stok otomatis berkurang 1)
-- Kembalikan buku (stok otomatis bertambah 1, status diperbarui)
-- Lihat daftar peminjaman pribadi
-- Sorting katalog
+### User
+- Melihat katalog buku.
+- Mencari buku berdasarkan OCAID atau judul (pencarian penulis juga tersedia sebagai fitur tambahan).
+- Meminjam buku jika stok lebih dari nol; stok berkurang satu dan transaksi dicatat.
+- Mengembalikan buku; stok bertambah satu dan status transaksi berubah.
+- Melihat daftar peminjaman yang masih aktif.
+- Mengurutkan katalog.
 
-**Sorting** (implementasi manual, tanpa `qsort`)
-- Insertion Sort — berdasarkan judul buku
-- Bubble Sort — berdasarkan penulis
-- Selection Sort — berdasarkan tahun terbit
+## Algoritma Sorting
 
-## Arsitektur Aplikasi
+Ketiga algoritma diimplementasikan secara manual tanpa `qsort()`.
 
-Aplikasi dibagi menjadi modul-modul terpisah:
+| Algoritma | Atribut | Urutan |
+|---|---|---|
+| Insertion Sort | OCAID | Ascending / Descending |
+| Insertion Sort | Judul | A–Z / Z–A |
+| Bubble Sort | Tahun terbit | Terlama–Terbaru / Terbaru–Terlama |
+| Selection Sort | Jumlah halaman | Sedikit–Banyak / Banyak–Sedikit |
+| Selection Sort | Stok | Sedikit–Banyak / Banyak–Sedikit |
 
-```
-main.c  ──►  login (baca user.txt)
-   │
-   ├── role "admin" ──►  admin.c  (menu_admin: CRUD buku, laporan)
-   │
-   └── role "user"  ──►  user.c   (menu_user: katalog, cari, pinjam, kembali, riwayat)
+Menu sorting yang sama digunakan oleh Admin dan User. Pengurutan dilakukan pada array di memori dan tidak mengubah urutan permanen katalog.
 
-admin.c / user.c ──► penyimpanan.c (baca/simpan berkas .txt)
-admin.c / user.c ──► sorting.c     (algoritma pengurutan)
-```
+## Struktur Direktori
 
-Alur singkat:
-1. Program dimulai dan memuat data akun dari `user.txt`.
-2. Pengguna login dengan username dan password.
-3. Program menampilkan menu sesuai role.
-4. Setiap perubahan data (tambah, edit, hapus, pinjam, kembali) langsung
-   disimpan ke berkas `.txt` terkait.
-5. Saat keluar, memori dinamis dibebaskan (`free`).
-
-## Struktur File
-
-```
-.
-├── CMakeLists.txt     # Konfigurasi build CMake
-├── README.md          # Dokumentasi
-├── main.c             # Entry point, proses login, dan pemilihan menu per role
-├── perpustakaan.h     # Definisi umum (struct Book, konstanta)
-├── penyimpanan.h/.c   # Struct Buku/User/Peminjaman + baca & simpan berkas .txt
-├── admin.h/.c         # Menu dan fitur Admin (CRUD buku, laporan transaksi)
-├── user.h/.c          # Menu dan fitur User (katalog, cari, pinjam, kembali, riwayat)
-├── sorting.h/.c       # Insertion, Bubble, dan Selection Sort manual
-├── katalog.txt          # Data katalog buku (dataset)
-├── user.txt           # Data akun (username, password, role)
-└── peminjaman.txt     # Data transaksi peminjaman
+```text
+UAS-Pratikum-Pemograman/
+├── src/
+│   ├── main.c
+│   ├── admin.c
+│   ├── penyimpanan.c
+│   ├── user.c
+│   └── sorting.c
+├── include/
+│   ├── admin.h
+│   ├── penyimpanan.h
+│   ├── user.h
+│   └── sorting.h
+├── data/
+│   ├── Books.txt          # Dataset master asli, tidak diubah aplikasi
+│   ├── katalog.txt        # Dibuat otomatis saat pertama kali dijalankan
+│   ├── user.txt           # Data akun
+│   └── peminjaman.txt     # Data transaksi
+├── build/                 # Hasil build lokal, tidak diunggah
+├── CMakeLists.txt
+├── README.md
+└── .gitignore
 ```
 
-## Format Data
+## Pengelolaan Data
 
-**`katalog.txt`** — dipisahkan spasi, kolom teks diapit tanda petik ganda:
-```
-<id> "<judul>" "<penulis>" <tahun> <halaman> <stok>
-```
+### Dataset master: `data/Books.txt`
 
-**`user.txt`**
-```
-<username> <password> <role>      # role: admin | user
+Dataset Open Library merupakan sumber data awal. Format sumber yang digunakan adalah:
+
+```text
+<ocaid> "<title>" "<author>" <year> <page_count> <edition_id> <work_id> <url>
 ```
 
-**`peminjaman.txt`**
+Aplikasi tidak mengubah file master tersebut.
+
+### Katalog operasional: `data/katalog.txt`
+
+Saat program pertama kali dijalankan, fungsi `buat_katalog_awal()` membaca `Books.txt` dan membuat `katalog.txt` jika file katalog belum ada atau masih kosong. Konversi mempertahankan OCAID asli, mengambil judul, penulis, tahun, dan jumlah halaman, mengisi penerbit awal dengan `Tidak diketahui`, serta memberikan stok awal 5.
+
+Baris pertama katalog berisi penanda `#KATALOG_PERPUSTAKAAN` agar program dapat mengenali file operasional. Baris data berikutnya menggunakan format:
+
+```text
+<ocaid> "<judul>" "<penulis>" "<penerbit>" <tahun> <halaman> <stok>
 ```
-<id_transaksi> <username> <id_buku> "<judul>" <tanggal_pinjam> <tanggal_kembali> <status>
+
+Semua fitur administrasi, katalog, pencarian, sorting, peminjaman, dan pengembalian menggunakan `katalog.txt`. File ini tidak dibuat ulang setiap kali program berjalan agar perubahan stok dan data admin tetap tersimpan. Jika ingin mengimpor ulang dataset master, cadangkan katalog dan transaksi terlebih dahulu.
+
+**Migrasi dari format katalog lama:** versi sebelumnya memakai ID numerik dan belum memiliki kolom penerbit. Sebelum menjalankan versi kode ini untuk pertama kali, cadangkan lalu pindahkan/hapus `data/katalog.txt` lama agar dibuat ulang dengan OCAID asli. Jika `data/peminjaman.txt` lokal sudah berisi transaksi dari versi lama yang menyimpan ID numerik, jangan menghapusnya sembarangan: cadangkan dan migrasikan referensi ID buku lama ke OCAID sesuai urutan dataset terlebih dahulu. File `data/peminjaman.txt` di repository contoh saat ini kosong.
+
+### Data akun: `data/user.txt`
+
+Format:
+
+```text
+<username> <password> <role>
 ```
-Format tanggal `DD-MM-YYYY`; status `DIPINJAM` / `KEMBALI`.
 
-## Panduan Kompilasi dan Menjalankan
+Role yang digunakan adalah `admin` atau `user`. Contoh akun awal (sesuaikan dengan isi `data/user.txt` di repository):
 
-### Prasyarat
-- Compiler C (GCC / Clang)
-- CMake versi 3.10 atau lebih baru
+```text
+admin admin123 admin
+budi budi12 user
+siti siti12 user
+```
 
-### Dengan CMake (disarankan)
+### Data transaksi: `data/peminjaman.txt`
 
-```bash
-git clone <url-repositori>
-cd <nama-repositori>
+Format:
 
+```text
+<id_transaksi> <username> <ocaid> "<judul_buku>" <tanggal_pinjam> <tanggal_kembali> <status>
+```
+
+- Tanggal mengikuti format `DD-MM-YYYY`.
+- Status peminjaman: `DIPINJAM`.
+- Status setelah pengembalian: `KEMBALI`.
+- Jika belum dikembalikan, `tanggal_kembali` berisi `-`.
+
+## Persyaratan
+
+- GCC atau Clang yang mendukung C11.
+- CMake versi 3.16 atau lebih baru.
+
+## Kompilasi dan Menjalankan
+
+**Penting:** jalankan program dari direktori utama repository karena semua path data menggunakan awalan `data/`.
+
+### Windows (MinGW)
+
+```powershell
 cmake -S . -B build -G "MinGW Makefiles"
 cmake --build build
+.\build\perpustakaan.exe
 ```
 
-Jalankan program dari folder `build` (berkas `.txt` otomatis disalin ke sana):
+### Linux / macOS
 
 ```bash
-./build/perpustakaan       # Linux / macOS
-./build/perpustakaan.exe      # Windows
+cmake -S . -B build
+cmake --build build
+./build/perpustakaan
 ```
 
-### Tanpa CMake (GCC langsung)
+### Kompilasi langsung menggunakan GCC
+
+Dari direktori utama repository:
 
 ```bash
-gcc -std=c11 -Wall -Wextra main.c admin.c user.c penyimpanan.c sorting.c -o perpustakaan
-./perpustakaan
+gcc -std=c11 -Wall -Wextra -Iinclude \
+  src/main.c src/admin.c src/user.c src/penyimpanan.c src/sorting.c \
+  -o perpustakaan
 ```
 
-> **Penting:** program membaca berkas `.txt` dari direktori tempat program
-> dijalankan, sehingga `katalog.txt`, `user.txt`, dan `peminjaman.txt` harus
-> berada di direktori yang sama dengan executable.
+Jalankan pada Windows dengan `./perpustakaan.exe` atau Linux/macOS dengan `./perpustakaan`.
 
-### Cara Penggunaan
+## Catatan Penting
 
-1. Jalankan program, lalu masukkan username dan password.
-2. Pilih menu sesuai role (Admin atau User).
-3. Pilih menu **Keluar** agar sesi ditutup dengan aman.
+1. Jangan mengubah `Books.txt` melalui aplikasi.
+2. Jangan menghapus `katalog.txt` sembarangan karena file tersebut menyimpan perubahan operasional dan stok.
+3. Jika katalog perlu dibuat ulang dari master dataset, buat cadangan `katalog.txt` dan `peminjaman.txt` terlebih dahulu.
+4. Pastikan `Books.txt`, `user.txt`, dan `peminjaman.txt` berada di dalam folder `data/`.
+5. Password pada `user.txt` merupakan data demonstrasi proyek, bukan penyimpanan password aman untuk aplikasi produksi.
 
 ## Kontribusi Individu
 
-Kontribusi setiap anggota dapat dilihat secara transparan melalui
-*commit history* dan *pull request* pada repositori GitHub ini.
+Kontribusi masing-masing anggota dapat dilihat melalui riwayat commit dan pull request pada repository GitHub.
+
+---
+
+UAS Praktikum Pemrograman Kelas A — Informatika, FMIPA, Universitas Syiah Kuala (2026).
