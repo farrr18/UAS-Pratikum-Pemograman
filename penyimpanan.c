@@ -18,94 +18,294 @@ static void trim_spasi(char *str){
     str[j] = '\0';
 }
 
-int pecah_baris(const char *baris, char kolom[][256], int max_kolom){
-    int i = 0, jumlah_kolom = 0;
+static void hapus_kurung_siku(char *teks) {
+    int j = 0;
 
-    while (baris[i] != '\0' && baris[i] != '\n' && baris[i] != '\r' && jumlah_kolom < max_kolom){
-        while (baris[i] == ' ' || baris[i] == '\t') {i++;}
-        if (baris[i] == '\0' || baris[i] == '\n' || baris[i] == '\r') {break;}
+    for (int i = 0; teks[i] != '\0'; i++) {
+        if (teks[i] != '[' && teks[i] != ']') {
+            teks[j++] = teks[i];
+        }
+    }
+
+    teks[j] = '\0';
+}
+
+static void tulis_teks_berkutip(FILE *fp, const char *teks) {
+    fputc('"', fp);
+
+    for (int i = 0; teks[i] != '\0'; i++) {
+        if (teks[i] == '"') {
+            fputc('"', fp);
+        }
+
+        fputc(teks[i], fp);
+    }
+
+    fputc('"', fp);
+}
+
+int pecah_baris(const char *baris, char kolom[][256], int max_kolom) {
+    int i = 0;
+    int jumlah_kolom = 0;
+
+    while (baris[i] != '\0' &&
+           baris[i] != '\n' &&
+           baris[i] != '\r' &&
+           jumlah_kolom < max_kolom) {
+
+        while (baris[i] == ' ' || baris[i] == '\t') {
+            i++;
+        }
+
+        if (baris[i] == '\0' ||
+            baris[i] == '\n' ||
+            baris[i] == '\r') {
+            break;
+        }
 
         int j = 0;
-        if (baris[i] == '"'){
+
+        if (baris[i] == '"') {
             i++;
-            while (baris[i] != '\0' && baris[i] != '"' && baris[i] != '\n' && baris[i] != '\r'){
-                if (j < 255) {kolom[jumlah_kolom][j++] = baris[i];}
-                i++;
+
+            while (baris[i] != '\0' &&
+                   baris[i] != '\n' &&
+                   baris[i] != '\r') {
+
+                if (baris[i] == '"') {
+                    if (baris[i + 1] == '"') {
+                        if (j < 255) {
+                            kolom[jumlah_kolom][j++] = '"';
+                        }
+                        i += 2;
+                    } else {
+                        i++;
+                        break;
+                    }
+
+                } else {
+                    if (j < 255) {
+                        kolom[jumlah_kolom][j++] = baris[i];
+                    }
+
+                    i++;
+                }
             }
-            if (baris[i] == '"') {i++;}
+
         } else {
-            while (baris[i] != '\0' && baris[i] != ' ' && baris[i] != '\t' && baris[i] != '\n' && baris[i] != '\r'){
-                if (j < 255) {kolom[jumlah_kolom][j++] = baris[i];}
+            while (baris[i] != '\0' &&
+                   baris[i] != ' ' &&
+                   baris[i] != '\t' &&
+                   baris[i] != '\n' &&
+                   baris[i] != '\r') {
+
+                if (j < 255) {
+                    kolom[jumlah_kolom][j++] = baris[i];
+                }
+
                 i++;
             }
         }
 
         kolom[jumlah_kolom][j] = '\0';
         trim_spasi(kolom[jumlah_kolom]);
+
         jumlah_kolom++;
     }
 
-   return jumlah_kolom;
+    return jumlah_kolom;
 }
 
-int baca_buku(const char *nama_file, Buku **daftar_buku, int *jumlah_buku){
+int baca_buku(const char *nama_file, Buku **daftar_buku, int *jumlah_buku) {
     FILE *fp = fopen(nama_file, "r");
+
     if (fp == NULL) {
         *daftar_buku = NULL;
         *jumlah_buku = 0;
         return 0;
     }
-    int kapasitas = 128, count = 0;
+
+    int kapasitas = 128;
+    int count = 0;
+
     Buku *temp_list = (Buku *)malloc(kapasitas * sizeof(Buku));
+
     if (temp_list == NULL) {
         fclose(fp);
+        *daftar_buku = NULL;
+        *jumlah_buku = 0;
         return 0;
     }
+
     char baris[MAX_LINE];
     char kolom[10][256];
 
     while (fgets(baris, sizeof(baris), fp) != NULL) {
         int n_kolom = pecah_baris(baris, kolom, 10);
-        if (n_kolom < 5) continue;
 
-        if (strcmp(kolom[0], "ID") == 0 || strcmp(kolom[0], "id") == 0 || strcmp(kolom[0], "ocaid") == 0) {
+        if (n_kolom < 5) {
+            continue;
+        }
+
+        if (strcmp(kolom[0], "ID") == 0 ||
+            strcmp(kolom[0], "id") == 0 ||
+            strcmp(kolom[0], "ocaid") == 0) {
             continue;
         }
 
         if (count >= kapasitas) {
             kapasitas *= 2;
-            Buku *baru = (Buku *)realloc(temp_list, kapasitas * sizeof(Buku));
+
+            Buku *baru = (Buku *)realloc(
+                temp_list, kapasitas * sizeof(Buku)
+            );
+
             if (baru == NULL) {
                 free(temp_list);
                 fclose(fp);
+                *daftar_buku = NULL;
+                *jumlah_buku = 0;
                 return 0;
             }
+
             temp_list = baru;
         }
 
-        int id_baca = atoi(kolom[0]);
-        temp_list[count].id = (id_baca > 0) ? id_baca : (count + 1);
+        temp_list[count].id = atoi(kolom[0]);
 
-        strncpy(temp_list[count].judul, kolom[1], sizeof(temp_list[count].judul) - 1);
-        temp_list[count].judul[sizeof(temp_list[count].judul) - 1] = '\0';
+        strncpy(temp_list[count].judul, kolom[1],
+                sizeof(temp_list[count].judul) - 1);
 
-        strncpy(temp_list[count].penulis, kolom[2], sizeof(temp_list[count].penulis) - 1);
-        temp_list[count].penulis[sizeof(temp_list[count].penulis) - 1] = '\0';
+        temp_list[count].judul[
+            sizeof(temp_list[count].judul) - 1
+        ] = '\0';
+
+        strncpy(temp_list[count].penulis, kolom[2],
+                sizeof(temp_list[count].penulis) - 1);
+
+        temp_list[count].penulis[
+            sizeof(temp_list[count].penulis) - 1
+        ] = '\0';
 
         temp_list[count].tahun = atoi(kolom[3]);
         temp_list[count].halaman = atoi(kolom[4]);
 
-        if (n_kolom >= 6 && isdigit((unsigned char)kolom[5][0])) {
-            temp_list[count].stok = atoi(kolom[5]);
+        if (n_kolom >= 6) {
+            char *akhir;
+            long stok_baca = strtol(kolom[5], &akhir, 10);
+
+            if (akhir != kolom[5] &&
+                *akhir == '\0' &&
+                stok_baca >= 0 &&
+                stok_baca <= 2147483647L) {
+                temp_list[count].stok = (int)stok_baca;
+            } else {
+                temp_list[count].stok = 5;
+            }
         } else {
             temp_list[count].stok = 5;
         }
 
         count++;
     }
+
     fclose(fp);
+
     *daftar_buku = temp_list;
     *jumlah_buku = count;
+
+    return 1;
+}
+
+int buat_katalog_awal(const char *file_asli, const char *file_katalog) {
+
+    FILE *cek = fopen(file_katalog, "r");
+
+    if (cek != NULL) {
+        fseek(cek, 0, SEEK_END);
+        long ukuran = ftell(cek);
+        fclose(cek);
+
+        if (ukuran > 0) {
+            return 1;
+        }
+    }
+
+    FILE *sumber = fopen(file_asli, "r");
+
+    if (sumber == NULL) {
+        printf("Gagal membuka file %s!\n", file_asli);
+        return 0;
+    }
+
+    FILE *tujuan = fopen(file_katalog, "w");
+
+    if (tujuan == NULL) {
+        printf("Gagal membuat file %s!\n", file_katalog);
+        fclose(sumber);
+        return 0;
+    }
+
+    char baris[4096];
+    char kolom[10][256];
+
+    int id_buku = 1;
+    int jumlah_buku = 0;
+
+    while (fgets(baris, sizeof(baris), sumber) != NULL) {
+        int n_kolom = pecah_baris(baris, kolom, 10);
+
+        if (n_kolom < 5) {
+            continue;
+        }
+
+        if (strcmp(kolom[0], "ID") == 0 ||
+            strcmp(kolom[0], "id") == 0 ||
+            strcmp(kolom[0], "ocaid") == 0) {
+            continue;
+        }
+
+        int tahun = atoi(kolom[3]);
+        int halaman = atoi(kolom[4]);
+
+        hapus_kurung_siku(kolom[1]);
+        hapus_kurung_siku(kolom[2]);
+
+        kolom[2][149] = '\0';
+
+        fprintf(tujuan, "%d ", id_buku);
+
+        tulis_teks_berkutip(tujuan, kolom[1]);
+        fprintf(tujuan, " ");
+
+        tulis_teks_berkutip(tujuan, kolom[2]);
+
+        fprintf(tujuan, " %d %d 5\n", tahun, halaman);
+
+        id_buku++;
+        jumlah_buku++;
+    }
+
+    int gagal = ferror(sumber);
+    fclose(sumber);
+
+    if (ferror(tujuan)) {
+        gagal = 1;
+    }
+
+    if (fclose(tujuan) != 0) {
+        gagal = 1;
+    }
+
+    if (gagal || jumlah_buku == 0) {
+        remove(file_katalog);
+        printf("Gagal membuat katalog dari dataset!\n");
+        return 0;
+    }
+
+    printf("Katalog berhasil dibuat!\n");
+    printf("Jumlah buku: %d\n", jumlah_buku);
+
     return 1;
 }
 
@@ -215,22 +415,34 @@ int baca_peminjaman(const char *nama_file, Peminjaman **daftar_peminjaman, int *
     return 1;
 }
 
-int simpan_buku(const char *nama_file, Buku *daftar_buku, int jumlah_buku){
+int simpan_buku(const char *nama_file, Buku *daftar_buku, int jumlah_buku) {
     FILE *fp = fopen(nama_file, "w");
+
     if (fp == NULL) {
         return 0;
     }
+
     for (int i = 0; i < jumlah_buku; i++) {
-        fprintf(fp, "%d \"%s\" \"%s\" %d %d %d\n", 
-                daftar_buku[i].id, 
-                daftar_buku[i].judul, 
-                daftar_buku[i].penulis, 
-                daftar_buku[i].tahun, 
-                daftar_buku[i].halaman, 
+        fprintf(fp, "%d ", daftar_buku[i].id);
+
+        tulis_teks_berkutip(fp, daftar_buku[i].judul);
+        fprintf(fp, " ");
+
+        tulis_teks_berkutip(fp, daftar_buku[i].penulis);
+
+        fprintf(fp, " %d %d %d\n",
+                daftar_buku[i].tahun,
+                daftar_buku[i].halaman,
                 daftar_buku[i].stok);
     }
-    fclose(fp);
-    return 1;
+
+    int gagal = ferror(fp);
+
+    if (fclose(fp) != 0) {
+        gagal = 1;
+    }
+
+    return !gagal;
 }
 
 int simpan_peminjaman(const char *nama_file, Peminjaman *daftar_pinjaman, int jumlah_pinjaman){
