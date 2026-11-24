@@ -108,16 +108,15 @@ Format tanggal `DD-MM-YYYY`; status `DIPINJAM` / `KEMBALI`.
 git clone <url-repositori>
 cd <nama-repositori>
 
-cmake -S . -B build
+cmake -S . -B build -G "MinGW Makefiles"
 cmake --build build
 ```
 
 Jalankan program dari folder `build` (berkas `.txt` otomatis disalin ke sana):
 
 ```bash
-cd build
-./perpustakaan        # Linux / macOS
-perpustakaan.exe      # Windows
+./build/perpustakaan       # Linux / macOS
+./build/perpustakaan.exe      # Windows
 ```
 
 ### Tanpa CMake (GCC langsung)
