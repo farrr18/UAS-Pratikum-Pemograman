@@ -4,7 +4,7 @@ Project UAS Praktikum Pemrograman Kelas A — Program Studi Informatika, FMIPA U
 
 Aplikasi Command Line Interface (CLI) menggunakan bahasa C untuk mengelola katalog buku dan sirkulasi peminjaman. Aplikasi memiliki dua peran, yaitu Admin (Pustakawan) dan User (Anggota/Mahasiswa). Data disimpan secara persisten dalam berkas teks `.txt`.
 
-## Anggota Kelompok dan Pembagian Tugas
+## Anggota Kelompok dan Pembagian Tugas (Kelompok 7)
 
 | No. | Nama Lengkap | NPM | Kontribusi / Job Description |
 |---|---|---|---|
