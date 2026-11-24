@@ -9,7 +9,7 @@
 
 static void menu_sorting_user(void);
 static int pastikan_file_transaksi(void){
-    FILE*file = fopen("peminjaman.txt", "a");
+    FILE*file = fopen(PATH_TRANSAKSI, "a");
 
     if (file == NULL){
         return 0;
@@ -45,13 +45,21 @@ void menu_user(const char *username){
         printf("0. Logout\n");
 
         printf("Pilih menu: ");
-        if (scanf("%d", &pilihan) != 1){
+
+        int hasil_input = scanf("%d", &pilihan);
+
+        if (hasil_input == EOF) {
+            printf("\nInput berakhir. Keluar dari menu pengguna.\n");
+            break;
+        }
+
+        if (hasil_input != 1) {
             printf("Input harus berupa angka!\n");
 
             int karakter;
-            while((karakter = getchar()) != '\n' && karakter != EOF);
+            while ((karakter = getchar()) != '\n' && karakter != EOF);
 
-            pilihan =-1;
+            pilihan = -1;
             continue;
         }
 
@@ -96,7 +104,7 @@ void tampilkan_katalog_user(void){
 
     printf("\n=== DAFTAR KATALOG BUKU ===\n");
 
-    if(!baca_buku("katalog.txt", &daftar_buku, &jumlah_buku)){
+    if(!baca_buku(PATH_KATALOG_BUKU, &daftar_buku, &jumlah_buku)){
         printf("Gagal membaca katalog buku!\n");
         free(daftar_buku);
         return;
@@ -144,7 +152,7 @@ void cari_buku(void){
     int karakter;
     while ((karakter = getchar()) != '\n' && karakter != EOF);
 
-    if (!baca_buku("katalog.txt", &daftar_buku, &jumlah_buku)){
+    if (!baca_buku(PATH_KATALOG_BUKU, &daftar_buku, &jumlah_buku)){
         printf("Gagal membaca katalog buku!\n");
         free(daftar_buku);
         return;
@@ -243,7 +251,7 @@ void pinjam_buku(const char *username) {
     int id_transaksi = 1;
 
     printf("\n=== PEMINJAMAN BUKU ===\n");
-    if (!baca_buku("katalog.txt", &daftar_buku, &jumlah_buku)) {
+    if (!baca_buku(PATH_KATALOG_BUKU, &daftar_buku, &jumlah_buku)) {
         printf("Gagal membaca katalog buku!\n");
         free(daftar_buku);
         return;
@@ -285,7 +293,7 @@ void pinjam_buku(const char *username) {
         return;
     }
 
-    FILE *file = fopen("peminjaman.txt", "a");
+    FILE *file = fopen(PATH_TRANSAKSI, "a");
 
     if (file == NULL){
         printf("Gagal membuka file transaksi!\n");
@@ -295,7 +303,7 @@ void pinjam_buku(const char *username) {
 
     fclose(file);
 
-    if (!baca_peminjaman("peminjaman.txt",&daftar_pinjam, &jumlah_pinjam)){
+    if (!baca_peminjaman(PATH_TRANSAKSI,&daftar_pinjam, &jumlah_pinjam)){
         printf("Gagal membaca data transaksi!\n");
         free(daftar_buku);
         free(daftar_pinjam);
@@ -348,17 +356,17 @@ void pinjam_buku(const char *username) {
 
     daftar_buku[indeks_buku].stok--;
 
-    if (!simpan_buku("katalog.txt", daftar_buku, jumlah_buku)){
+    if (!simpan_buku(PATH_KATALOG_BUKU, daftar_buku, jumlah_buku)){
         printf("Gagal menyimpan perubahan stok!\n");
         free(daftar_buku);
         free(daftar_pinjam);
         return;
     }
 
-    if (!simpan_peminjaman("peminjaman.txt",daftar_pinjam, jumlah_pinjam)){
+    if (!simpan_peminjaman(PATH_TRANSAKSI,daftar_pinjam, jumlah_pinjam)){
 
         daftar_buku[indeks_buku].stok++;
-        simpan_buku("katalog.txt", daftar_buku, jumlah_buku);
+        simpan_buku(PATH_KATALOG_BUKU, daftar_buku, jumlah_buku);
 
         printf("Gagal menyimpan transaksi peminjaman!\n");
         free(daftar_buku);
@@ -394,7 +402,7 @@ void kembalikan_buku(const char *username) {
         printf("Gagal membuka file transaksi!\n");
         return;
     }
-    if (!baca_peminjaman("peminjaman.txt",&daftar_pinjam, &jumlah_pinjam)) {
+    if (!baca_peminjaman(PATH_TRANSAKSI,&daftar_pinjam, &jumlah_pinjam)) {
         printf("Gagal membaca data peminjaman!\n");
         free(daftar_pinjam);
         return;
@@ -460,7 +468,7 @@ void kembalikan_buku(const char *username) {
         return;
     }
 
-    if (!baca_buku("katalog.txt", &daftar_buku, &jumlah_buku)) {
+    if (!baca_buku(PATH_KATALOG_BUKU, &daftar_buku, &jumlah_buku)) {
         printf("Gagal membaca katalog buku!\n");
         free(daftar_pinjam);
         free(daftar_buku);
@@ -499,17 +507,17 @@ void kembalikan_buku(const char *username) {
 
     daftar_buku[indeks_buku].stok++;
 
-    if (!simpan_buku("katalog.txt", daftar_buku, jumlah_buku)) {
+    if (!simpan_buku(PATH_KATALOG_BUKU, daftar_buku, jumlah_buku)) {
         printf("Gagal menyimpan perubahan stok buku!\n");
         free(daftar_buku);
         free(daftar_pinjam);
         return;
     }
 
-    if (!simpan_peminjaman("peminjaman.txt",daftar_pinjam, jumlah_pinjam)) {
+    if (!simpan_peminjaman(PATH_TRANSAKSI,daftar_pinjam, jumlah_pinjam)) {
 
         daftar_buku[indeks_buku].stok--;
-        simpan_buku("katalog.txt", daftar_buku, jumlah_buku);
+        simpan_buku(PATH_KATALOG_BUKU, daftar_buku, jumlah_buku);
 
         printf("Gagal menyimpan data pengembalian!\n");
         free(daftar_buku);
@@ -540,7 +548,7 @@ void riwayat_peminjaman(const char *username) {
         printf("Gagal membuka file transaksi!\n");
         return;
     }
-    if (!baca_peminjaman("peminjaman.txt", &daftar_pinjam, &jumlah_pinjam)) {
+    if (!baca_peminjaman(PATH_TRANSAKSI, &daftar_pinjam, &jumlah_pinjam)) {
         printf("Gagal membaca data riwayat peminjaman!\n");
         free(daftar_pinjam);
         return;
@@ -581,7 +589,7 @@ static void menu_sorting_user(void) {
     Buku *daftar_buku = NULL;
     int jumlah_buku = 0;
 
-    if (!baca_buku("katalog.txt", &daftar_buku, &jumlah_buku)) {
+    if (!baca_buku(PATH_KATALOG_BUKU, &daftar_buku, &jumlah_buku)) {
         printf("Gagal membaca katalog buku!\n");
         return;
     }

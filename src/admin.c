@@ -7,9 +7,9 @@
 #define MAX_BUKU 500
 #define PANJANG_BARIS 600
 
-#define FILE_AKUN "user.txt"
-#define FILE_BUKU "katalog.txt"
-#define FILE_TRANSAKSI "peminjaman.txt"
+#define FILE_AKUN PATH_AKUN_USER
+#define FILE_BUKU PATH_KATALOG_BUKU
+#define FILE_TRANSAKSI PATH_TRANSAKSI
 
 void tambah_buku(void) {
     Buku *daftar_buku = NULL;

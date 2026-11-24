@@ -2,6 +2,11 @@
 #define PENYIMPANAN_H
 #include <stdio.h>
 
+#define PATH_DATASET_BUKU "data/Books.txt"
+#define PATH_KATALOG_BUKU "data/katalog.txt"
+#define PATH_AKUN_USER "data/user.txt"
+#define PATH_TRANSAKSI "data/peminjaman.txt"
+
 typedef struct{
 int id, tahun, halaman, stok;
 char judul[256], penulis[150];

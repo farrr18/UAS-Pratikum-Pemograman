@@ -49,12 +49,12 @@ int main() {
     char username_login[50];
     char role_login[20];
 
-    if (!buat_katalog_awal("Books.txt", "katalog.txt")) {
+    if (!buat_katalog_awal(PATH_DATASET_BUKU, PATH_KATALOG_BUKU)) {
         printf("Gagal menyiapkan katalog perpustakaan!\n");
         return 1;
     }
 
-    if (!baca_user("user.txt", &daftar_user, &jumlah_user)) {
+    if (!baca_user(PATH_AKUN_USER, &daftar_user, &jumlah_user)) {
         printf("Gagal membaca data akun!\n");
         return 1;
     }

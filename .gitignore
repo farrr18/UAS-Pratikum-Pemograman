@@ -4,5 +4,5 @@ cmake-build-*/
 .vscode/
 *.o
 *.exe
-perpustakaan
-katalog.txt
+/perpustakaan
+/data/katalog.txt
