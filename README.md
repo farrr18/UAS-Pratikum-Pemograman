@@ -4,13 +4,13 @@ Project UAS Praktikum Pemrograman Kelas A — Program Studi Informatika, FMIPA U
 
 Aplikasi Command Line Interface (CLI) menggunakan bahasa C untuk mengelola katalog buku dan sirkulasi peminjaman. Aplikasi memiliki dua peran, yaitu Admin (Pustakawan) dan User (Anggota/Mahasiswa). Data disimpan secara persisten dalam berkas teks `.txt`.
 
-## Anggota Kelompok
+## Anggota Kelompok dan Pembagian Tugas
 
-| No | Nama Lengkap | NPM |
-|---|---|---|
-| 1 | Afirah El Abidah | 260810701100002 |
-| 2 | Muhammad Azfar Syukri | 260810701100035 |
-| 3 | Cut Riska Dewi | 260810701100057 |
+| No. | Nama Lengkap | NPM | Kontribusi / Job Description |
+|---|---|---|---|
+| 1. | Afirah El Abidah | 260810701100002 | Mengembangkan modul pengelolaan dan penyimpanan data (`penyimpanan.c` dan `penyimpanan.h`), meliputi pembacaan, penulisan, dan pengelolaan data buku, akun pengguna, serta transaksi peminjaman menggunakan file `.txt`. |
+| 2. | Muhammad Azfar Syukri | 260810701100035 | Mengembangkan modul pengguna (`user.c` dan `user.h`) yang mencakup tampilan katalog, pencarian buku, peminjaman, pengembalian, dan daftar peminjaman pengguna. Mengembangkan modul pengurutan (`sorting.c` dan `sorting.h`) menggunakan algoritma Insertion Sort, Bubble Sort, dan Selection Sort. |
+| 3. | Cut Riska Dewi | 260810701100057 | Mengembangkan modul administrator (`admin.c` dan `admin.h`), meliputi penambahan, penampilan, pengubahan, dan penghapusan data buku (CRUD), laporan transaksi, serta pengelolaan menu administrator. |
 
 ## Fitur Aplikasi
 
